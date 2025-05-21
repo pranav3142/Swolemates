@@ -2,6 +2,26 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Commands
+   ```bash
+   npx expo start
+   ```
+
+   ```bash
+   git pull
+   ```
+
+   ```bash
+   git add .
+   ```
+   ```bash
+   git commit -m "<message>"
+   ```
+
+   ```bash
+   git push origin master
+   ```
+
 ## Get started
 
 1. Install dependencies
