@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Image } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -23,19 +24,60 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
+            //<Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
+            <Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
+
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="workout"
+        options={{
+          title: 'Workout',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} color={color} size={24}/>
+            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
+          ),
+        }}
+      />
+  
+
+      <Tabs.Screen
+        name="buddymatch"
+        options={{
+          title: 'Buddy Match',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'man' : 'man-outline'} color={color} size={24}/>
+            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="calorietracker"
+        options={{
+          title: 'Calorie Tracker',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'nutrition' : 'nutrition-outline'} color={color} size={24}/>
+            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="about"
         options={{
-          title: 'About',
+          title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24}/>
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={24}/>
+            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
           ),
         }}
       />
+
+  
+      
     </Tabs>
   );
 }

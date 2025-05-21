@@ -1,43 +1,32 @@
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter} from 'expo-router';
 import { Alert, Button, Dimensions, StyleSheet, Text, View } from 'react-native';
 
-export default function Index() {
+
+export default function AboutScreen() {
   const screenHeight = Dimensions.get('window').height;
   const containerHeight = screenHeight / 10;
   const router = useRouter();
-
   return (
     <View style={styles.container}>
       <View style={[styles.translucentWrapper, { height: containerHeight }]}>
-        <View style={styles.row}>
-          <View style={styles.buttonBox}>
-            <Button title="Search" onPress={() => router.push('/hometabs/search')} />
-          </View>
-          <View style={styles.buttonBox}>
-            <Button title="Gym Locator" onPress={() => router.push('/hometabs/gymlocator')} />
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.buttonBox}>
-            <Button title="News" onPress={() => router.push('/hometabs/news')} />
-          </View>
-          <View style={styles.buttonBox}>
-            <Button title="Chat" onPress={() => router.push('/hometabs/chat')} />
-          </View>
-        </View>
-      </View>
-      <Text style={styles.text}>Home screen</Text>
-      <Link href="/about" style={styles.link}>
-        Go to About screen
-      </Link>
-      
-     
+              <View style={styles.row}>
+                <View style={styles.buttonBox}>
+                  <Button title="Start Workout" onPress={() => router.push('/workouttabs/startworkout')} />
+                </View>
+              
+              </View>
+              <View style={styles.row}>
+                <View style={styles.buttonBox}>
+                  <Button title="Workout generator" onPress={() => router.push('/workouttabs/workoutgen')} />
+                </View>
+                <View style={styles.buttonBox}>
+                  <Button title="Exercises" onPress={() => router.push('/workouttabs/exercises')} />
+                </View>
+              </View>
+            </View>
     </View>
-    
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -87,3 +76,4 @@ const styles = StyleSheet.create({
   justifyContent: 'center'
 },
 });
+
