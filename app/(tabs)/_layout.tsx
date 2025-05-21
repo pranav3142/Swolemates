@@ -8,6 +8,7 @@ export default function TabLayout() {
   return (
     <Tabs
   screenOptions={{
+    
     tabBarActiveTintColor: '#ffd33d',
     headerStyle: {
       backgroundColor: '#25292e',
@@ -24,7 +25,6 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            //<Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
             <Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
 
           ),
@@ -37,7 +37,6 @@ export default function TabLayout() {
           title: 'Workout',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} color={color} size={24}/>
-            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
           ),
         }}
       />
@@ -49,7 +48,6 @@ export default function TabLayout() {
           title: 'Find Buddy',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'man' : 'man-outline'} color={color} size={24}/>
-            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
           ),
         }}
       />
@@ -60,7 +58,6 @@ export default function TabLayout() {
           title: 'Calories',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'nutrition' : 'nutrition-outline'} color={color} size={24}/>
-            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
           ),
         }}
       />
@@ -71,7 +68,6 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={24}/>
-            //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
           ),
         }}
       />
