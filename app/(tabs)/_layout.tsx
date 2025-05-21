@@ -46,7 +46,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="buddymatch"
         options={{
-          title: 'Buddy Match',
+          title: 'Find Buddy',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'man' : 'man-outline'} color={color} size={24}/>
             //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>
@@ -57,7 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="calorietracker"
         options={{
-          title: 'Calorie Tracker',
+          title: 'Calories',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'nutrition' : 'nutrition-outline'} color={color} size={24}/>
             //<Image source={require('../../assets/images/dumbbell.png')} style={{ width: 24, height: 24, tintColor: color }}/>

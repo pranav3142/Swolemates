@@ -1,6 +1,6 @@
 import { Text, View, StyleSheet } from 'react-native';
 
-export default function AboutScreen() {
+export default function CalorieTracker() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Calorie Tracker</Text>

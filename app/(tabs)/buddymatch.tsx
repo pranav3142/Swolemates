@@ -3,7 +3,7 @@ import { Link, useRouter} from 'expo-router';
 import { Alert, Button, Dimensions, StyleSheet, Text, View } from 'react-native';
 
 
-export default function AboutScreen() {
+export default function BuddyMatch() {
   const screenHeight = Dimensions.get('window').height;
   const containerHeight = screenHeight / 10;
   const router = useRouter();

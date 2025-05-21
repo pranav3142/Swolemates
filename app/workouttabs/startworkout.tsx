@@ -1,12 +1,27 @@
 import { Text, View, StyleSheet } from 'react-native';
+import { useLayoutEffect } from 'react';
+import { useNavigation } from 'expo-router';
 
-export default function AboutScreen() {
+export default function StartWorkout() {
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Start Workout',
+      headerStyle: {
+        backgroundColor: '#25292e',
+      },
+      headerTintColor: '#fff',
+    });
+  }, [navigation]);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Startworkout</Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1c1c1e' }}>
+      <Text style={{ color: 'white' }}>Start Workout</Text>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

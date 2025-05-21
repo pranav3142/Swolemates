@@ -1,12 +1,27 @@
 import { Text, View, StyleSheet } from 'react-native';
+import { useLayoutEffect } from 'react';
+import { useNavigation } from 'expo-router';
 
-export default function AboutScreen() {
+export default function News() {
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'News',
+      headerStyle: {
+        backgroundColor: '#25292e',
+      },
+      headerTintColor: '#fff',
+    });
+  }, [navigation]);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>News</Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1c1c1e' }}>
+      <Text style={{ color: 'white' }}>News</Text>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
