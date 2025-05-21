@@ -1,10 +1,9 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { StatusBar } from 'expo-status-bar'
-import { hp, wp } from '../../helpers/common'
-import { theme } from '../../constants/themes'
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import Button from '../../components/Button'
+import { theme } from '../../constants/themes'
+import { hp, wp } from '../../helpers/common'
 
 const welcome = () => {
   return (

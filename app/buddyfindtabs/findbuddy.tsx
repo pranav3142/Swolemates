@@ -1,6 +1,8 @@
 import { Text, View, StyleSheet } from 'react-native';
 import { useLayoutEffect } from 'react';
-import { useNavigation } from 'expo-router';
+import { useNavigation, Tabs } from 'expo-router';
+
+
 
 export default function findabuddy() {
   const navigation = useNavigation();
@@ -18,7 +20,9 @@ export default function findabuddy() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1c1c1e' }}>
       <Text style={{ color: 'white' }}>Find a gym buddy</Text>
+      
     </View>
+    
   );
 }
 
