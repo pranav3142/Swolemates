@@ -3,9 +3,11 @@ import { StatusBar } from 'expo-status-bar'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import Button from '../../components/Button'
 import { theme } from '../../constants/themes'
-import { hp, wp } from '../../helpers/common'
+import Button from '../../components/Button'
+import { useRouter } from 'expo-router'
 
 const welcome = () => {
+  const router = useRouter
   return (
     <ScreenWrapper bg="white">
       <StatusBar style ="dark" />
@@ -25,13 +27,13 @@ const welcome = () => {
           <Button
             title="Getting Started"
             buttonStyle={{marginHorizontal: wp(3)}}
-            onPress={()=>{}}
+            onPress={()=> router.push('signUp')}
           />
           <View style={styles.bottomTextContainer}>
             <Text style={styles.loginText}>
               Already have an account!
             </Text>
-            <Pressable>
+            <Pressable onPress={()=> router.push('login')}>
               <Text style={[styles.loginText, {color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold}]}>
                 Login
               </Text>
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: 'white',
+    backgroundColor: 'gray',
     paddingHorizontal: wp(4)
   },
   welcomeImage: {
