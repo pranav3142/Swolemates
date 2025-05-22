@@ -1,13 +1,14 @@
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import React from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { StatusBar } from 'expo-status-bar'
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
-import Button from '../../components/Button'
+import { hp, wp } from '../../helpers/common'
 import { theme } from '../../constants/themes'
 import Button from '../../components/Button'
 import { useRouter } from 'expo-router'
 
 const welcome = () => {
-  const router = useRouter
+  const router = useRouter();
   return (
     <ScreenWrapper bg="white">
       <StatusBar style ="dark" />
