@@ -20,6 +20,11 @@ export default function Exercises() {
   const [exercises, setExercises] = useState<Exercise[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const toggleExpand = (index: number) => {
+    setExpandedIndex((prev) => (prev === index ? null : index));
+  };
 
   const apiKey = '5uSqRB/Dod0jN38Kkj3MJg==A8ztw8uyaP3IiIaU'; 
 
@@ -88,16 +93,33 @@ export default function Exercises() {
       {loading && <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />}
       {error && <Text style={styles.text}>Error: {error}</Text>}
       {exercises && (
+        
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {exercises.map((ex, index) => (
-            <View key={index} style={styles.card}>
-              <Text style={styles.title}>{ex.name}</Text>
-              <Text style={styles.text}>Muscle: {ex.muscle}</Text>
-              <Text style={styles.text}>Type: {ex.type}</Text>
-              <Text style={styles.text}>Equipment: {ex.equipment}</Text>
-              <Text style={styles.text}>Difficulty: {ex.difficulty}</Text>
-              
+            <TouchableOpacity key = {index} onPress = {() => toggleExpand(index)} activeOpacity ={0.8}>
+              <View key={index} style={styles.card}>
+                <Text style={styles.title}>{ex.name}</Text>
+                <Text style={styles.text}>Muscle: {ex.muscle}</Text>
+                <Text style={styles.text}>Type: {ex.type}</Text>
+                <Text style={styles.text}>Equipment: {ex.equipment}</Text>
+                <Text style={styles.text}>Difficulty: {ex.difficulty}</Text>
+
+                {ex.instructions && (
+                  <Text style={{ color: '#ffd33d', fontStyle: 'italic', marginTop: 4 }}>
+                    {expandedIndex === index ? 'Hide instructions' : 'Instructions'}
+                  </Text>
+                )}
+
+                {expandedIndex === index && (
+                  <Text style={[styles.text, { marginTop: 8 }]}>
+                    Instructions: {ex.instructions}
+                  </Text>
+                  
+                )}
+
+        
             </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       )}

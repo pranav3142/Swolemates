@@ -11,16 +11,16 @@ export default function Workout() {
       <View style={[styles.translucentWrapper, { height: containerHeight }]}>
               <View style={styles.row}>
                 <View style={styles.buttonBox}>
-                  <Button title="Start Workout" onPress={() => router.push('/workouttabs/startworkout')} />
+                  <Button color = '#ffd33d' title="Start Workout" onPress={() => router.push('/workouttabs/startworkout')} />
                 </View>
               
               </View>
               <View style={styles.row}>
                 <View style={styles.buttonBox}>
-                  <Button title="Workout generator" onPress={() => router.push('/workouttabs/workoutgen')} />
+                  <Button color = '#ffd33d' title="Workout generator" onPress={() => router.push('/workouttabs/workoutgen')} />
                 </View>
                 <View style={styles.buttonBox}>
-                  <Button title="Exercises" onPress={() => router.push('/workouttabs/exercises')} />
+                  <Button color = '#ffd33d' title="Exercises" onPress={() => router.push('/workouttabs/exercises')} />
                 </View>
               </View>
             </View>
