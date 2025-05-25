@@ -13,7 +13,7 @@ interface Exercise {
 
 const PARAMS: ('name'|'muscle' | 'type' | 'difficulty' | 'equipment')[] = ['name','muscle', 'type', 'difficulty', 'equipment'];
 
-export default function addexercise() {
+export default function Exercises() {
   const navigation = useNavigation();
   const [queryParam, setQueryParam] = useState<'name'|'muscle' | 'type' | 'difficulty' | 'equipment'>('name');
   const [searchValue, setSearchValue] = useState('');
@@ -30,7 +30,7 @@ export default function addexercise() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: 'Exercises',
+      title: 'Add a exercise',
       headerStyle: { backgroundColor: '#25292e' },
       headerTintColor: '#fff',
     });
