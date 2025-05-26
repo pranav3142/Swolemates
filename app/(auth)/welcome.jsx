@@ -1,20 +1,20 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
 import ScreenWrapper from '@/components/ScreenWrapper'
-import { StatusBar } from 'expo-status-bar'
-import { hp, wp } from '../../helpers/common'
-import { theme } from '../../constants/themes'
-import Button from '../../components/Button'
 import { useRouter } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
+import React from 'react'
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import Button from '../../components/Button'
+import { theme } from '../../constants/themes'
+import { hp, wp } from '../../helpers/common'
 
 const welcome = () => {
   const router = useRouter();
   return (
-    <ScreenWrapper bg="white">
+    <ScreenWrapper bg="#25292e">
       <StatusBar style ="dark" />
       <View style ={styles.container}>
         {/* welcome image */}
-        <Image style={styles.welcomeImage} resizeMode='contain' source={require('../../assets/images/Mlogonew.png')} />
+        <Image style={styles.welcomeImage} resizeMode='contain' source={require('../../assets/images/SLogo.png')} />
 
         {/* title  */}
         <View style={{gap: 20}}>
@@ -52,25 +52,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: 'gray',
-    paddingHorizontal: wp(4)
+    justifyContent: 'flex-start',
+    backgroundColor: '#25292e',
+    paddingHorizontal: wp(10),
+    gap: hp(1)
   },
   welcomeImage: {
-    height: hp(30),
+    height: hp(60),
     width: wp(100),
     alignSelf: 'center',
   },
   title: {
     color: theme.colors.text,
-    fontSize: hp(4),
+    fontSize: hp(5),
     textAlign: 'center',
     fontWeight: theme.fonts.extraBold
   },
   punchline: {
     textAlign: 'center',
     paddingHorizontal: wp(10),
-    fontSize: hp(1.7),
+    fontSize: hp(1.9),
     color: theme.colors.text
   },
   footer: {

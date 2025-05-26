@@ -1,5 +1,6 @@
 import { Link, useRouter } from 'expo-router';
 import { Alert, Button, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
 
 export default function Index() {
   const screenHeight = Dimensions.get('window').height;
