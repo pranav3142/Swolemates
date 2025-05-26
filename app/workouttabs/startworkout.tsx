@@ -1,23 +1,43 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation, Link, useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
+
+interface Exercise {
+  name: string;
+  type: string;
+  muscle: string;
+  equipment: string;
+  difficulty: string;
+  instructions: string;
+}
 
 export default function TimerScreen() {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
+  const [exerciseList, setExerciseList] = useState<Exercise[]>([]);
+
   const navigation = useNavigation();
   const router = useRouter();
+  const { selectedExercise } = useLocalSearchParams();
 
   useLayoutEffect(() => {
-      navigation.setOptions({
-        title: 'Workout Log',
-        headerStyle: { backgroundColor: '#25292e' },
-        headerTintColor: '#fff',
-      });
-    }, [navigation]);
+    navigation.setOptions({
+      title: 'Workout Log',
+      headerStyle: { backgroundColor: '#25292e' },
+      headerTintColor: '#fff',
+      headerBackVisible: false,
+      headerLeft: () => (
+      <TouchableOpacity onPress={() => router.replace('/workout')} style={{ paddingHorizontal: 16 }}>
+        <Ionicons name={'chevron-back-outline'} color={'white'} size={24}/>
+      </TouchableOpacity>
+      )
+    });
+  }, [navigation]);
 
   useEffect(() => {
-    let interval : any;
+    let interval: any;
     if (running) {
       interval = setInterval(() => {
         setSeconds(prev => prev + 1);
@@ -28,15 +48,34 @@ export default function TimerScreen() {
     return () => clearInterval(interval);
   }, [running]);
 
+  useEffect(() => {
+    if (selectedExercise) {
+      try {
+        const parsed: Exercise[] = JSON.parse(selectedExercise as string);
+        setExerciseList(parsed);
+      } catch (err) {
+        console.error('Failed to parse selectedExercise list:', err);
+      }
+    }
+  }, [selectedExercise]);
+
   const toggleTimer = () => {
     setRunning(prev => !prev);
   };
 
-  const resetTimer =() =>{
+  const resetTimer = () => {
+    setRunning(false);
     setSeconds(0);
   };
 
-  
+  const navigateToAdd = () => {
+    router.push({
+      pathname: '/workouttabs/addexercise',
+      params: {
+        currentList: JSON.stringify(exerciseList),
+      },
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -47,12 +86,24 @@ export default function TimerScreen() {
             <Text style={styles.buttonText}>{running ? 'Stop' : 'Start'}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={resetTimer} style={styles.buttonOutline}>
-            <Text style={styles.buttonText}>{"Reset"}</Text>
+            <Text style={styles.buttonText}>Reset</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <TouchableOpacity onPress={() => router.push('/workouttabs/addexercise')} style={styles.addExerciseButton}>
+      <ScrollView style={styles.exerciseList}>
+        {exerciseList.map((ex, idx) => (
+          <View key={idx} style={styles.exerciseCard}>
+            <Text style={styles.exerciseText}>{ex.name}</Text>
+            <Text style={styles.detailText}>Muscle: {ex.muscle}</Text>
+            <Text style={styles.detailText}>Type: {ex.type}</Text>
+            <Text style={styles.detailText}>Equipment: {ex.equipment}</Text>
+            <Text style={styles.detailText}>Difficulty: {ex.difficulty}</Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      <TouchableOpacity onPress={navigateToAdd} style={styles.addExerciseButton}>
         <Text style={styles.buttonText}>Add exercise</Text>
       </TouchableOpacity>
     </View>
@@ -63,7 +114,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#111',
-    justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 24,
   },
@@ -81,12 +131,11 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   buttonOutline: {
-    paddingVertical:10,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 8,
-    
   },
   buttonText: {
     color: 'white',
@@ -99,8 +148,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 10,
+    marginTop: 12,
   },
-  timercontainer:{
+  timercontainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
@@ -110,5 +160,25 @@ const styles = StyleSheet.create({
   buttonActive: {
     backgroundColor: '#ffd33d',
     borderColor: '#ffd33d',
+  },
+  exerciseList: {
+    flex: 1,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  exerciseCard: {
+    backgroundColor: '#222',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  exerciseText: {
+    color: '#ffd33d',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  detailText: {
+    color: 'white',
+    fontSize: 14,
   },
 });
