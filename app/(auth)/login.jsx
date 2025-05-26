@@ -28,7 +28,7 @@ const Login = () => {
     setTimeout(() => {
       setLoading(false); // Set loading back to false
       // After simulated successful login, replace the current stack with the (tabs) group
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     }, 1000); // Simulate network delay for 1 second
     // --- End of changes for Step 5 ---
   }
