@@ -1,90 +1,95 @@
-import { Link, useRouter } from 'expo-router';
-import { Alert, Button, Dimensions, StyleSheet, Text, View } from 'react-native';
-import { useEffect } from 'react';
+import React from 'react'; 
+import { Dimensions, StyleSheet, Text, View, ImageBackground, Pressable } from 'react-native';
+import Carousel from 'react-native-reanimated-carousel';
+import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+type RoutePath = '/hometabs/search' | '/hometabs/gymlocator' | '/hometabs/news' | '/hometabs/chat';
+
+const data: { title: string; path: RoutePath; image: any }[] = [
+  { title: 'Search', path: '/hometabs/search', image: require('../../assets/images/gympeople.png') },
+  { title: 'Gym Locator', path: '/hometabs/gymlocator', image: require('../../assets/images/gymmap.png') },
+  { title: 'News', path: '/hometabs/news', image: require('../../assets/images/gymnews.jpg') },
+  { title: 'Chat', path: '/hometabs/chat', image: require('../../assets/images/chat.png') },
+];
+
 
 export default function Index() {
-  const screenHeight = Dimensions.get('window').height;
-  const containerHeight = screenHeight / 10;
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <View style={[styles.translucentWrapper, { height: containerHeight }]}>
-        <View style={styles.row}>
-          <View style={styles.buttonBox}>
-            <Button title="Search" onPress={() => router.push('/hometabs/search')} />
-          </View>
-          <View style={styles.buttonBox}>
-            <Button title="Gym Locator" onPress={() => router.push('/hometabs/gymlocator')} />
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.buttonBox}>
-            <Button title="News" onPress={() => router.push('/hometabs/news')} />
-          </View>
-          <View style={styles.buttonBox}>
-            <Button title="Chat" onPress={() => router.push('/hometabs/chat')} />
-          </View>
-        </View>
-      </View>
-      <Text style={styles.text}>Home screen</Text>
-      <Link href="/about" style={styles.link}>
-        Go to About screen
-      </Link>
+      <Carousel
+        
+        width={screenWidth * 0.85}
+        height={220}
+        data={data}
+        mode="parallax"
+        modeConfig={{
+          parallaxScrollingScale: 0.9,
+          parallaxScrollingOffset: 50,
+          parallaxAdjacentItemScale: 0.75,
+        }}
+        scrollAnimationDuration={1000}
+        renderItem={({ item, index, animationValue }) => {
+          
+
+          return (
+              <ImageBackground source={item.image} style={styles.image} imageStyle={styles.imageRadius}>
+                <View style={styles.overlay}>
+                  <Pressable onPress={() => router.push(item.path)} hitSlop={10}>
+                    <Text style={styles.title}>{item.title}</Text>
+                  </Pressable>
+                </View>
+              </ImageBackground>
+          );
+        }}
+      />
       
-     
     </View>
-    
   );
 }
 
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#25292e',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  text: {
-    color: '#fff',
-  },
- link: {
-    fontSize: 20,
-    textDecorationLine: 'underline',
-    color: '#fff',
-    marginTop: 10,
-  },
-  buttonContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
-    justifyContent: 'space-evenly',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 3,
-  },
-  buttonBox: {
-    flex: 1,
-    margin: 0,
-    padding: 0,
-    borderWidth: 1,
-    borderColor: '#ffffff55',
-    borderRadius:10,
-    justifyContent: 'center',
-   alignItems: 'center', 
-  },
-  translucentWrapper: {
-  width: '100%',
-  padding: 0,
-  backgroundColor: 'rgba(255, 255, 255, 0.1)', // translucent white
-  borderColor: '#ffffff88', // translucent white border
-  borderWidth: 1,
-  borderRadius: 10,
-  alignSelf: 'center',
+  flex: 1,
+  backgroundColor: '#25292e',
+  justifyContent: 'flex-start',
   alignItems: 'center',
-  justifyContent: 'center'
-},
+  //paddingVertical: 0,
+  },
+  card: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  pressable: {
+    flex: 1,
+  },
+  image: {
+    width: '100%',
+    height: 220,
+    justifyContent: 'flex-end',
+  },
+  imageRadius: {
+    borderRadius: 16,
+  },
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    padding: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  title: {
+    color: '#ffd33d',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
 });
