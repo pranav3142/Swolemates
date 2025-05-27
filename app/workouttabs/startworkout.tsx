@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+
+interface SetEntry {
+  reps: string;
+  weight: string;
+}
 
 interface Exercise {
   name: string;
@@ -11,7 +16,9 @@ interface Exercise {
   equipment: string;
   difficulty: string;
   instructions: string;
+  sets?: SetEntry[];
 }
+
 
 export default function TimerScreen() {
   const [seconds, setSeconds] = useState(0);
@@ -99,8 +106,51 @@ export default function TimerScreen() {
             <Text style={styles.detailText}>Type: {ex.type}</Text>
             <Text style={styles.detailText}>Equipment: {ex.equipment}</Text>
             <Text style={styles.detailText}>Difficulty: {ex.difficulty}</Text>
+
+            {(ex.sets ?? []).map((set, setIdx) => (
+              <View key={setIdx} style={{ marginTop: 6 }}>
+                <Text style={styles.detailText}>Set {setIdx + 1}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Reps"
+                  value={set.reps}
+                  onChangeText={(text) => {
+                    const updatedList = [...exerciseList];
+                    updatedList[idx].sets![setIdx].reps = text;
+                    setExerciseList(updatedList);
+                  }}
+                  keyboardType="numeric"
+                  placeholderTextColor="#aaa"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Weight"
+                  value={set.weight}
+                  onChangeText={(text) => {
+                    const updatedList = [...exerciseList];
+                    updatedList[idx].sets![setIdx].weight = text;
+                    setExerciseList(updatedList);
+                  }}
+                  keyboardType="numeric"
+                  placeholderTextColor="#aaa"
+                />
+              </View>
+            ))}
+
+            <TouchableOpacity
+              style={[styles.buttonOutline, { marginTop: 8 }]}
+              onPress={() => {
+                const updatedList = [...exerciseList];
+                if (!updatedList[idx].sets) updatedList[idx].sets = [];
+                updatedList[idx].sets!.push({ reps: '', weight: '' });
+                setExerciseList(updatedList);
+              }}
+            >
+              <Text style={styles.buttonText}>Add Set</Text>
+            </TouchableOpacity>
           </View>
         ))}
+
       </ScrollView>
 
       <TouchableOpacity onPress={navigateToAdd} style={styles.addExerciseButton}>
@@ -181,4 +231,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
   },
+  input: {
+  backgroundColor: '#2c2c2e',
+  color: 'white',
+  padding: 8,
+  borderRadius: 6,
+  marginTop: 4,
+  marginBottom: 4,
+},
+
 });
