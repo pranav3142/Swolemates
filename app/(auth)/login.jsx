@@ -12,26 +12,32 @@ import Input from '../../components/Input'
 
 const Login = () => {
   const router = useRouter();
-  const emailRef = useRef("");
-  const passwordRef = useRef("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async ()=>{
-    // if(!emailRef.current || !passwordRef.current){
-    //   Alert.alert('Login', "please fill all the fields!");
-    //   return;
-    // }
+    if(!email || !password){
+      Alert.alert('Login', "Please fill all the fields!");
+      return;
+    }
     
+    const HARDCODED_USERNAME = 'swolemates';
+    const HARDCODED_PASSWORD = 'swolemates123';
     setLoading(true);
-
-    // In a real app, this is where you'd call your authentication API (Firebase, Supabase, etc.)
-    setTimeout(() => {
+    
+    if (email === HARDCODED_USERNAME && password === HARDCODED_PASSWORD) {
+      setTimeout(() => {
       setLoading(false); // Set loading back to false
       // After simulated successful login, replace the current stack with the (tabs) group
       router.replace('/(tabs)/home');
-    }, 1000); // Simulate network delay for 1 second
-    // --- End of changes for Step 5 ---
+    }, 1000);
+  } else {
+    setLoading(false);
+    Alert.alert('Invalid username or password.');
   }
+}
+  
 
   return (
     <ScreenWrapper bg="#25292e">
@@ -53,13 +59,13 @@ const Login = () => {
         <Input
             icon={<Icon name="mail" size={26} strokeWidth={1.6} />}
             placeholder='Enter your email'
-            onChangeText={value=> emailRef.current = value}
+             onChangeText={setEmail}
         />
         <Input
             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
             placeholder='Enter your password'
             secureTextEntry
-            onChangeText={value=> emailRef.current = value}
+             onChangeText={setPassword}
         />
         <Text style={styles.forgotPassword}>
           Forgot Password?
