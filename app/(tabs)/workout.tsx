@@ -24,7 +24,9 @@ export default function Workout() {
                 </View>
               </View>
             </View>
+            <Text style = {styles.title}> Your Workouts</Text>
     </View>
+    
   );
 }
 
@@ -75,5 +77,11 @@ const styles = StyleSheet.create({
   alignItems: 'center',
   justifyContent: 'center'
 },
+title: {
+    color: '#ffd33d',
+    fontSize: 30,
+    fontWeight: 'bold',
+    paddingVertical : 20,
+  },
 });
 

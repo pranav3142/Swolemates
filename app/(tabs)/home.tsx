@@ -44,9 +44,11 @@ export default function Index() {
                   </Pressable>
                 </View>
               </ImageBackground>
+              
           );
         }}
       />
+      <Text style = {styles.title2}>Workouts</Text>
       
     </View>
   );
@@ -92,4 +94,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
+  title2: {
+    color: '#ffd33d',
+    fontSize: 35,
+    fontWeight: 'bold',
+  },
+
 });
