@@ -1,14 +1,16 @@
-import { Alert, StyleSheet, Text, View, Pressable, TextInput } from 'react-native'
-import React, {useRef, useState} from 'react'
-import ScreenWrapper from '../../components/ScreenWrapper'
-import {theme} from '../../constants/themes'
-import Icon from '../../assets/icons'
-import { StatusBar } from 'expo-status-bar'
 import { useRouter } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
+import { useState } from 'react'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import Icon from '../../assets/icons'
 import BackButton from '../../components/BackButton'
 import Button from '../../components/Button'
-import { wp, hp } from '../../helpers/common'
 import Input from '../../components/Input'
+import ScreenWrapper from '../../components/ScreenWrapper'
+import { theme } from '../../constants/themes'
+import { hp, wp } from '../../helpers/common'
+
+import auth from '@react-native-firebase/auth'
 
 const Login = () => {
   const router = useRouter();
@@ -16,30 +18,52 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async ()=>{
-    if(!email || !password){
-      Alert.alert('Login', "Please fill all the fields!");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Login Error', 'Please enter both email and password.');
       return;
     }
-    
-    const HARDCODED_USERNAME = 'swolemates';
-    const HARDCODED_PASSWORD = 'swolemates123';
-    setLoading(true);
-    
-    if (email === HARDCODED_USERNAME && password === HARDCODED_PASSWORD) {
-      setTimeout(() => {
-      setLoading(false); // Set loading back to false
-      // After simulated successful login, replace the current stack with the (tabs) group
-      router.replace('/(tabs)/home');
-    }, 1000);
-  } else {
-    setLoading(false);
-    Alert.alert('Invalid username or password.');
-  }
-}
-  
 
-  return (
+    setLoading(true);
+    try {
+      await auth().signInWithEmailAndPassword(email, password);
+      // If login is successful, navigate to the home screen
+      router.replace('/(tabs)/home');
+    } catch (error) {
+      console.error("Firebase Login Error:", error);
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/invalid-email':
+            errorMessage = 'The email address is invalid.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'This user account has been disabled.';
+            break;
+          case 'auth/user-not-found':
+            errorMessage = 'No user found with this email.';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password.';
+            break;
+          case 'auth/invalid-credential': // Generic for invalid email/password combinations
+            errorMessage = 'Invalid email or password.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your internet connection.';
+            break;
+          default:
+            errorMessage = error.message; // Fallback to Firebase's message
+        }
+      }
+      Alert.alert('Login Failed', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+    return (
     <ScreenWrapper bg="#25292e">
       <StatusBar style="dark" />
       <View style={styles.container}>
@@ -60,18 +84,20 @@ const Login = () => {
             icon={<Icon name="mail" size={26} strokeWidth={1.6} />}
             placeholder='Enter your email'
              onChangeText={setEmail}
+            value={email}
         />
         <Input
             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
             placeholder='Enter your password'
             secureTextEntry
              onChangeText={setPassword}
+            value={password}
         />
         <Text style={styles.forgotPassword}>
           Forgot Password?
         </Text>
         {/* button  */}
-        <Button title={'Login'} loading={loading} onPress={onSubmit} />
+        <Button title={'Login'} loading={loading} onPress={handleLogin} />
       </View>
 
       {/* footer  */}
@@ -97,6 +123,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 15,
     paddingHorizontal: wp(5),
+    paddingTop: wp(15),
   },
   welcomeText:{
     fontSize: hp(4),

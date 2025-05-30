@@ -16,7 +16,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.abefqy.Swolemates",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -25,6 +27,16 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-firebase/app",
+    [
+      "expo-build-properties",
+      {
+         "ios": {
+          "useFrameworks": "static"
+          }
+        }
+      ],
+
       [
         "expo-splash-screen",
         {
@@ -37,6 +49,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "958b7a48-6689-468f-89b2-da2e40212483"
+      }
     }
   }
 }

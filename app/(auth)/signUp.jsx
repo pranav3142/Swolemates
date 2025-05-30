@@ -10,19 +10,61 @@ import Button from '../../components/Button'
 import { wp, hp } from '../../helpers/common'
 import Input from '../../components/Input'
 
+import auth from '@react-native-firebase/auth';
+
 const SignUp = () => {
   const router = useRouter();
-  const emailRef = useRef("");
-  const passwordRef = useRef("");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async ()=>{
-    if(!emailRef.current || !passwordRef.current){
-      Alert.alert('Sign Up', "please fill all the fields!");
+  const handleSignUp = async () => {
+    // Include name validation if desired, though Firebase Auth only uses email/password for creation
+    if (!name || !email || !password) {
+      Alert.alert('Sign Up Error', 'Please fill all the fields!');
       return;
     }
-    //good to go
-  }
+
+    setLoading(true);
+    try {
+      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+
+      await userCredential.user.updateProfile({
+        displayName: name,
+      });
+
+      Alert.alert('Success', 'Account created and signed in!');
+      // After successful signup, navigate to the home screen
+      router.replace('/(tabs)/home');
+    } catch (error) {
+      console.error("Firebase Sign Up Error:", error);
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/invalid-email':
+            errorMessage = 'The email address is invalid.';
+            break;
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email address is already in use!';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'The password is too weak. It must be at least 6 characters.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your internet connection.';
+            break;
+          default:
+            errorMessage = error.message; // Fallback to Firebase's message
+        }
+      }
+      Alert.alert('Sign Up Failed', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <ScreenWrapper bg="#25292e">
@@ -44,22 +86,27 @@ const SignUp = () => {
         <Input
             icon={<Icon name="user" size={26} strokeWidth={1.6} />}
             placeholder='Enter your name'
-            onChangeText={value=> nameRef.current = value}
+            onChangeText={setName}
+            value={name}
         />
         <Input
             icon={<Icon name="mail" size={26} strokeWidth={1.6} />}
             placeholder='Enter your email'
-            onChangeText={value=> emailRef.current = value}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
         />
         <Input
             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
             placeholder='Enter your password'
             secureTextEntry
-            onChangeText={value=> emailRef.current = value}
+            onChangeText={setPassword}
+            value={password}
         />
     
         {/* button  */}
-        <Button title={'Sign Up'} loading={loading} onPress={onSubmit} />
+        <Button title={'Sign Up'} loading={loading} onPress={handleSignUp} />
       </View>
 
       {/* footer  */}
@@ -85,6 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 15,
     paddingHorizontal: wp(5),
+    paddingTop: wp(15),
   },
   welcomeText:{
     fontSize: hp(4),
