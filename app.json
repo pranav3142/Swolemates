@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.abefqy.Swolemates",
+      "googleServicesFile": "./GoogleService-Info.plist"
+
     },
     "android": {
       "adaptiveIcon": {
@@ -28,6 +31,7 @@
     "plugins": [
       "expo-router",
       "@react-native-firebase/app",
+      "@react-native-firebase/auth",
     [
       "expo-build-properties",
       {
