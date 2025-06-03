@@ -2,6 +2,8 @@ import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { supabase } from '../../utils/supabase';
+import auth from '@react-native-firebase/auth';
 
 
 interface SetEntry {
@@ -18,6 +20,38 @@ interface Exercise {
   instructions: string;
   sets?: SetEntry[];
 }
+
+async function saveWorkout(exercises: Exercise[]) {
+  const currentUser = auth().currentUser;
+
+  if (!currentUser) {
+    console.error("User not authenticated with Firebase");
+    return;
+  }
+  console.log("Inserting workout for UID:", currentUser?.uid);
+  console.log("Data:", JSON.stringify(exercises, null, 2));
+
+  const { error } = await supabase.from('workouts').insert({
+    user_id: currentUser.uid, // Supabase column should be "user_id" of type TEXT
+    data: exercises,
+    timestamp: new Date(),
+  });
+  
+  const testSupabase = async () => {
+  const { data, error } = await supabase.from('workouts').select('*').limit(1);
+  if (error) console.error('Supabase error:', error.message);
+  else console.log('Supabase response:', data);
+};
+
+
+  if (error) {
+    console.error('Error saving workout:', error.message);
+  } else {
+    console.log('Workout saved successfully');
+  }
+}
+
+
 
 
 export default function TimerScreen() {
@@ -155,6 +189,9 @@ export default function TimerScreen() {
 
       <TouchableOpacity onPress={navigateToAdd} style={styles.addExerciseButton}>
         <Text style={styles.buttonText}>Add exercise</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => saveWorkout( exerciseList)} style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d' }]}>
+        <Text style={{ color: '#000', fontWeight: 'bold' }}>Save Workout</Text>
       </TouchableOpacity>
     </View>
   );
