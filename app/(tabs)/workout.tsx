@@ -1,14 +1,23 @@
 import { Link, useRouter } from 'expo-router';
-import { Alert, Button, Dimensions, StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
+import { Alert, Button, Dimensions, StyleSheet,Text, View, ScrollView, TouchableOpacity, ImageBackground, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import auth from '@react-native-firebase/auth';
 import { supabase } from '../../utils/supabase';
+import Carousel from 'react-native-reanimated-carousel';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+type RoutePath = '/workouttabs/startworkout' | '/workouttabs/exercises' | '/workouttabs/workoutgen';
+
+const data: { title: string; path: RoutePath; image: any }[] = [
+  { title: 'StartWorkout', path: '/workouttabs/startworkout', image: require('../../assets/images/gympeople.png') },
+  { title: 'Exercise', path: '/workouttabs/exercises', image: require('../../assets/images/gymmap.png') },
+  { title: 'Generate a Workout', path: '/workouttabs/workoutgen', image: require('../../assets/images/gymnews.jpg') },
+];
 
 export default function Workout() {
-  const screenHeight = Dimensions.get('window').height;
-  const containerHeight = screenHeight / 10;
   const router = useRouter();
-
   const [workouts, setWorkouts] = useState([]);
   const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
 
@@ -36,57 +45,98 @@ export default function Workout() {
   const toggleDetails = (id: string) => {
     setExpandedWorkout(prev => (prev === id ? null : id));
   };
+  const handleDeleteWorkout = async (id: string) => {
+  Alert.alert(
+    'Delete Workout',
+    'Are you sure you want to delete this workout?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await supabase.from('workouts').delete().eq('id', id);
+          if (error) {
+            console.error('Error deleting workout:', error.message);
+          } else {
+            setWorkouts(prev => prev.filter(workout => workout.id !== id));
+          }
+        },
+      },
+    ]
+  );
+};
+
 
   return (
     <View style={styles.container}>
-      <View style={[styles.translucentWrapper, { height: containerHeight }]}>
-        <View style={styles.row}>
-          <View style={styles.buttonBox}>
-            <Button color='#ffd33d' title="Start Workout" onPress={() => router.push('/workouttabs/startworkout')} />
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.buttonBox}>
-            <Button color='#ffd33d' title="Workout generator" onPress={() => router.push('/workouttabs/workoutgen')} />
-          </View>
-          <View style={styles.buttonBox}>
-            <Button color='#ffd33d' title="Exercises" onPress={() => router.push('/workouttabs/exercises')} />
-          </View>
-        </View>
+      <Carousel
+        width={screenWidth * 0.85}
+        height={100}
+        data={data}
+        mode="parallax"
+        modeConfig={{
+          parallaxScrollingScale: 0.9,
+          parallaxScrollingOffset: 50,
+          parallaxAdjacentItemScale: 0.75,
+        }}
+        scrollAnimationDuration={1000}
+        renderItem={({ item }) => (
+          <ImageBackground source={item.image} style={styles.image} imageStyle={styles.imageRadius}>
+            <View style={styles.overlay}>
+              <Pressable onPress={() => router.push(item.path)} hitSlop={10}>
+                <Text style={styles.carouselTitle}>{item.title}</Text>
+              </Pressable>
+            </View>
+          </ImageBackground>
+        )}
+      />
+
+      
+      <View style={{ width: '100%', paddingHorizontal: 20, marginTop: 16 }}>
+        <Text style={[styles.title, { fontSize: 24, marginBottom: 8 }]}>Your Workouts</Text>
       </View>
 
-      <Text style={styles.title}>Your Workouts</Text>
+<ScrollView style={{ width: '100%', paddingHorizontal: 20 }}>
+  {workouts.map((workout, index) => (
+    <View key={workout.id || index} style={styles.workoutCard}>
+      <Text style={styles.workoutTitle}>
+        Workout {index + 1} — {new Date(workout.timestamp).toLocaleDateString()}
+      </Text>
 
-      <ScrollView style={{ width: '100%', paddingHorizontal: 20 }}>
-        {workouts.map((workout, index) => (
-          <View key={workout.id || index} style={styles.workoutCard}>
-            <Text style={styles.workoutTitle}>
-              Workout {index + 1} — {new Date(workout.timestamp).toLocaleDateString()}
-            </Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <TouchableOpacity onPress={() => toggleDetails(workout.id)} style={styles.detailsButton}>
+          <Text style={styles.detailsButtonText}>
+            {expandedWorkout === workout.id ? 'Hide Details' : 'View Details'}
+          </Text>
+        </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => toggleDetails(workout.id)} style={styles.detailsButton}>
-              <Text style={styles.detailsButtonText}>
-                {expandedWorkout === workout.id ? 'Hide Details' : 'View Details'}
-              </Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleDeleteWorkout(workout.id)}
+          style={[styles.detailsButton, { paddingHorizontal: 8 }]}
+        >
+          <Ionicons name ="trash-outline" size = {20} color='#ff5555'/>
+        </TouchableOpacity>
+      </View>
 
-            {expandedWorkout === workout.id && (
-              <View style={{ marginTop: 8 }}>
-                {workout.data?.map((exercise, i) => (
-                  <View key={i} style={{ marginBottom: 8 }}>
-                    <Text style={styles.exerciseName}>{exercise.name}</Text>
-                    {(exercise.sets ?? []).map((set, j) => (
-                      <Text key={j} style={styles.setText}>
-                        Set {j + 1}: {set.reps} reps × {set.weight} kg
-                      </Text>
-                    ))}
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        ))}
-      </ScrollView>
+      {expandedWorkout === workout.id && (
+        <View style={{ marginTop: 8 }}>
+          {workout.data?.map((exercise, i) => (
+            <View key={i} style={{ marginBottom: 8 }}>
+              <Text style={styles.exerciseName}>{exercise.name}</Text>
+              {(exercise.sets ?? []).map((set, j) => (
+                <Text key={j} style={styles.setText}>
+                  Set {j + 1}: {set.reps} reps × {set.weight} kg
+                </Text>
+              ))}
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  ))}
+</ScrollView>
+
     </View>
   );
 }
@@ -98,40 +148,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 3,
-  },
-  buttonBox: {
-    flex: 1,
-    margin: 0,
-    padding: 0,
-    borderWidth: 1,
-    borderColor: '#ffffff55',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  translucentWrapper: {
+  image: {
     width: '100%',
-    padding: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderColor: '#ffffff88',
-    borderWidth: 1,
-    borderRadius: 10,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  imageRadius: {
+    borderRadius: 16,
+  },
+  overlay: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    padding: 12,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  carouselTitle: {
+    fontSize: 20,
+    color: '#ffd33d',
+    fontWeight: 'bold',
   },
   title: {
     color: '#ffd33d',
-    fontSize: 30,
     fontWeight: 'bold',
-    paddingVertical: 20,
   },
   workoutCard: {
-    backgroundColor: '#2c2c2e',
+    backgroundColor: '#303030',
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
