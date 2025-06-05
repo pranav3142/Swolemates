@@ -32,7 +32,7 @@ async function saveWorkout(exercises: Exercise[]) {
   console.log("Data:", JSON.stringify(exercises, null, 2));
 
   const { error } = await supabase.from('workouts').insert({
-    user_id: currentUser.uid, // Supabase column should be "user_id" of type TEXT
+    user_id: currentUser.uid,
     data: exercises,
     timestamp: new Date(),
   });
@@ -61,6 +61,7 @@ export default function TimerScreen() {
 
   const navigation = useNavigation();
   const router = useRouter();
+  
   const { selectedExercise } = useLocalSearchParams();
 
   useLayoutEffect(() => {
@@ -190,9 +191,20 @@ export default function TimerScreen() {
       <TouchableOpacity onPress={navigateToAdd} style={styles.addExerciseButton}>
         <Text style={styles.buttonText}>Add exercise</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => saveWorkout( exerciseList)} style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d' }]}>
-        <Text style={{ color: '#000', fontWeight: 'bold' }}>Save Workout</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+  onPress={() => {
+    router.push({
+      pathname: '/workouttabs/saveworkout',
+      params: {
+        exercises: JSON.stringify(exerciseList),
+      },
+    });
+  }}
+  style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d' }]}
+>
+  <Text style={{ color: '#000', fontWeight: 'bold' }}>Finish Workout</Text>
+</TouchableOpacity>
+
     </View>
   );
 }

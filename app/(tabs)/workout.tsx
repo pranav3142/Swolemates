@@ -101,8 +101,9 @@ export default function Workout() {
   {workouts.map((workout, index) => (
     <View key={workout.id || index} style={styles.workoutCard}>
       <Text style={styles.workoutTitle}>
-        Workout {index + 1} — {new Date(workout.timestamp).toLocaleDateString()}
+        Workout {index + 1} : {workout.name || "No name"} — {new Date(workout.timestamp).toLocaleDateString()}
       </Text>
+      <Text style={styles.description}>{workout.description || ''}</Text>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <TouchableOpacity onPress={() => toggleDetails(workout.id)} style={styles.detailsButton}>
@@ -123,6 +124,7 @@ export default function Workout() {
         <View style={{ marginTop: 8 }}>
           {workout.data?.map((exercise, i) => (
             <View key={i} style={{ marginBottom: 8 }}>
+              
               <Text style={styles.exerciseName}>{exercise.name}</Text>
               {(exercise.sets ?? []).map((set, j) => (
                 <Text key={j} style={styles.setText}>
@@ -199,4 +201,9 @@ const styles = StyleSheet.create({
     color: '#ddd',
     marginLeft: 10,
   },
+  description: {
+    color: '#FFBF00',
+    //fontWeight: 'bold',
+  },
+
 });
