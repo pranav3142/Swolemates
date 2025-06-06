@@ -11,9 +11,9 @@ const { width: screenWidth } = Dimensions.get('window');
 type RoutePath = '/workouttabs/startworkout' | '/workouttabs/exercises' | '/workouttabs/workoutgen';
 
 const data: { title: string; path: RoutePath; image: any }[] = [
-  { title: 'StartWorkout', path: '/workouttabs/startworkout', image: require('../../assets/images/gympeople.png') },
-  { title: 'Exercise', path: '/workouttabs/exercises', image: require('../../assets/images/gymmap.png') },
-  { title: 'Generate a Workout', path: '/workouttabs/workoutgen', image: require('../../assets/images/gymnews.jpg') },
+  { title: 'StartWorkout', path: '/workouttabs/startworkout', image: require('../../assets/images/startworkoutpic.jpg') },
+  { title: 'Exercise', path: '/workouttabs/exercises', image: require('../../assets/images/anatomy.jpg') },
+  { title: 'Generate a Workout', path: '/workouttabs/workoutgen', image: require('../../assets/images/AI.jpg') },
 ];
 
 export default function Workout() {
