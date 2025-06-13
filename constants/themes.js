@@ -5,10 +5,12 @@ export const theme = {
         dark: '#3E3E3E',
         darkLight: 'E1E1E1',
         gray: '#e3e3e3',
+        taskbar: '#ffd33d',
 
         text: 'white', //#494949 grey
         textLight: '#7C7C7C',
         textDark: '#1D1D1D',
+        textGray: '#bbb',
 
         rose: '#ef4444',
         roseLight: '#f87171',
