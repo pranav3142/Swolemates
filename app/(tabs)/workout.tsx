@@ -71,10 +71,12 @@ export default function Workout() {
   return (
     <View style={styles.container}>
       <Carousel
-        width={screenWidth * 0.85}
+        width={screenWidth}
         height={100}
         data={data}
         mode="parallax"
+        autoPlay={true}
+        autoPlayInterval={3000}
         modeConfig={{
           parallaxScrollingScale: 0.9,
           parallaxScrollingOffset: 50,

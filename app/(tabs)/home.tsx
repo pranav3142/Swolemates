@@ -1,8 +1,12 @@
-import React from 'react'; 
-import { Dimensions, StyleSheet, Text, View, ImageBackground, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react'; 
+import { Dimensions, StyleSheet, Text, View, ImageBackground, Pressable, ScrollView, TouchableOpacity } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import auth from '@react-native-firebase/auth';
+import { supabase } from '../../utils/supabase';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -18,15 +22,41 @@ const data: { title: string; path: RoutePath; image: any }[] = [
 
 export default function Index() {
   const router = useRouter();
+  const [workouts, setWorkouts] = useState([]);
+const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
+
+useEffect(() => {
+  const fetchWorkouts = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) return;
+
+    const { data, error } = await supabase
+      .from('workouts')
+      .select('*')
+      .order('timestamp', { ascending: false });
+
+    if (error) console.error('Error fetching workouts:', error.message);
+    else setWorkouts(data);
+  };
+
+  fetchWorkouts();
+}, []);
+
+const toggleDetails = (id: string) => {
+  setExpandedWorkout(prev => (prev === id ? null : id));
+};
+
 
   return (
     <View style={styles.container}>
       <Carousel
         
-        width={screenWidth * 0.85}
+        width={screenWidth * 1}
         height={220}
         data={data}
         mode="parallax"
+        autoPlay={true}
+        autoPlayInterval={3000} 
         modeConfig={{
           parallaxScrollingScale: 0.9,
           parallaxScrollingOffset: 50,
@@ -49,6 +79,40 @@ export default function Index() {
         }}
       />
       <Text style = {styles.title2}>Workouts</Text>
+
+      <ScrollView style={{ width: '100%', paddingHorizontal: 20 }} contentContainerStyle={{ paddingBottom: 100 }}>
+  {workouts.map((workout, index) => (
+    <View key={workout.id || index} style={{ backgroundColor: '#303030', padding: 12, borderRadius: 8, marginBottom: 12 }}>
+      <Text style={{ color: '#ffd33d', fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>
+           {workout.user_id} : {workout.name || "No name"} — {new Date(workout.timestamp).toLocaleDateString()}
+      </Text>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <TouchableOpacity onPress={() => toggleDetails(workout.id)}>
+          <Text style={{ color: '#ffd33d', fontStyle: 'italic' }}>
+            {expandedWorkout === workout.id ? 'Hide Details' : 'View Details'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {expandedWorkout === workout.id && (
+        <View style={{ marginTop: 8 }}>
+          {workout.data?.map((exercise, i) => (
+            <View key={i} style={{ marginBottom: 8 }}>
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>{exercise.name}</Text>
+              {(exercise.sets ?? []).map((set, j) => (
+                <Text key={j} style={{ color: '#ddd', marginLeft: 10 }}>
+                  Set {j + 1}: {set.reps} reps × {set.weight} kg
+                </Text>
+              ))}
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  ))}
+</ScrollView>
+
       
     </View>
   );
