@@ -72,7 +72,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: wp(10),
     fontSize: hp(1.9),
-    color: theme.colors.text
+    color: theme.colors.text,
+    paddingBottom: 15,
   },
   footer: {
     gap: 30,
@@ -87,6 +88,6 @@ const styles = StyleSheet.create({
   loginText: {
     textAlign: 'center',
     color: theme.colors.text,
-    fontSize: hp(1.6)
+    fontSize: hp(1.8)
   }
 })

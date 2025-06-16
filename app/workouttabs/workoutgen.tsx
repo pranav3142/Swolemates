@@ -2,6 +2,7 @@ import { Text, View, StyleSheet, TextInput, TouchableOpacity, ScrollView, Activi
 import { useNavigation } from 'expo-router';
 import React, { useState, useLayoutEffect} from 'react';
 import { theme } from '@/constants/themes';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function ExGen() {
   const navigation = useNavigation();
@@ -12,6 +13,9 @@ export default function ExGen() {
   const [currentFitnessLevel, setCurrentFitnessLevel] = useState('');
   const [generatedWorkout, setGeneratedWorkout] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const API_KEY = "AIzaSyAtSZZ9qDp00JG-Wie6hV5pUwZE-kwGey8";
+  const ai = new GoogleGenerativeAI(API_KEY);
+
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -38,6 +42,7 @@ export default function ExGen() {
     try {
       // THIS IS WHERE YOU'LL INTEGRATE YOUR LLM API CALL
       // For now, simulating a response
+      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash'}); //	models/gemini-2.5-flash-preview-05-20
       const userPrompt = `
         Generate a workout plan based on the following user preferences:
         - Goals: ${goals}
@@ -53,37 +58,21 @@ export default function ExGen() {
         Format the output as a readable text, possibly using markdown for headings and bullet points.
         `;
 
-      console.log("Sending prompt to LLM (simulated):", userPrompt);
+      console.log("Sending prompt to Gemini API", userPrompt);
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const result = await model.generateContent(userPrompt);
+      const response = await result.response;
+      const text = await response.text();
 
-      // Simulate a generated workout (replace with actual LLM response)
-      const simulatedResponse = `
-**Warm-up (5 minutes):**
-* Light cardio (jumping jacks, high knees) - 2 minutes
-* Dynamic stretches (arm circles, leg swings) - 3 minutes
-
-**Main Workout:**
-* **Squats:** 3 sets of 10-12 reps
-* **Push-ups:** 3 sets to failure
-* **Plank:** 3 sets, hold for 30-60 seconds
-* **Lunges:** 3 sets of 10 reps per leg
-* **Dumbbell Rows (if dumbbells available):** 3 sets of 10-12 reps per arm
-* **Burpees (bodyweight option):** 3 sets of 8-10 reps
-
-**Cool-down (5 minutes):**
-* Static stretches (hamstring stretch, tricep stretch) - 5 minutes
-      `;
-
-      setGeneratedWorkout(simulatedResponse);
+      console.log("Gemini API Response:", text);
+      setGeneratedWorkout(text);
     } catch (error) {
       console.error('Error generating workout:', error);
-      Alert.alert('Error', 'Failed to generate workout. Please try again.');
+      Alert.alert('Error', 'Failed  to generate workout. Please check your internet connection.');
     } finally {
       setIsLoading(false);
     }
-  };
+    };
 
   return (
     // Using ScrollView to ensure content is scrollable if it exceeds screen height

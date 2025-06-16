@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Image,
-  TouchableOpacity,
-  ScrollView,
   LayoutAnimation,
-  Switch,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Collapsible from 'react-native-collapsible';
-import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function ProfileScreen() {
@@ -125,7 +125,7 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require('../../assets/images/userIcon.png')}
+              source={require('../../assets/images/userIconYellow.png')}
               style={styles.avatar}
             />
             <TouchableOpacity style={styles.editIcon}>
