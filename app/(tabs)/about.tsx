@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
     paddingHorizontal: 16,
-    paddingTop: 60,
+    paddingTop: 10,
   },
   profileSection: { alignItems: 'center', padding: 24 },
   avatarContainer: { position: 'relative' },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   username: { color: '#ffd33d', fontSize: 14 },
   followWrapper: {
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 0,
   },
   followContainer: {
     flexDirection: 'row',
@@ -217,8 +217,8 @@ const styles = StyleSheet.create({
   followButton: {
     backgroundColor: '#ffd33d',
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingHorizontal: 50,
+    paddingVertical: 10,
     marginHorizontal: 8,
   },
   followText: {

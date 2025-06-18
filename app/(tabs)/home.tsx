@@ -8,6 +8,7 @@ import { supabase } from '../../utils/supabase';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
+
 const { width: screenWidth } = Dimensions.get('window');
 
 type RoutePath = '/hometabs/search' | '/hometabs/gymlocator' | '/hometabs/news' | '/hometabs/chat';
@@ -25,10 +26,27 @@ export default function Index() {
   const [workouts, setWorkouts] = useState([]);
 const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
 
+const insertUserProfile = async () => {
+  const user = auth().currentUser;
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert({
+      id: user.uid, // Firebase UID
+      username: user.displayName || user.email?.split('@')[0] || 'user',
+    }, { onConflict: ['id'] });
+
+  if (error) console.error('Error inserting profile:', error.message);
+  else console.log('Profile inserted/updated');
+};
+
 useEffect(() => {
   const fetchWorkouts = async () => {
     const currentUser = auth().currentUser;
     if (!currentUser) return;
+
+    await insertUserProfile();
 
     const { data, error } = await supabase
       .from('workouts')

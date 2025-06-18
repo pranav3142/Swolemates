@@ -1,20 +1,97 @@
-//import { Text, View, StyleSheet } from 'react-native';
-import { Link, useRouter} from 'expo-router';
-import { Alert, Button, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useLayoutEffect, useState, useEffect, } from 'react';
+import { supabase } from '../../utils/supabase';
+import { useNavigation } from 'expo-router';
+import auth from '@react-native-firebase/auth';
 
+export default function FollowersList() {
+  const navigation = useNavigation();    
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [followBackMap, setFollowBackMap] = useState<Record<string, boolean>>({});
 
-export default function followers() {
-  const screenHeight = Dimensions.get('window').height;
-  const containerHeight = screenHeight / 10;
-  const router = useRouter();
+  const currentUser = auth().currentUser;
+   useLayoutEffect(() => {
+      navigation.setOptions({
+        title: 'Your Followers',
+        headerStyle: {
+          backgroundColor: '#25292e',
+        },
+        headerTintColor: '#fff',
+      });
+    }, [navigation]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchFollowers = async () => {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('follower_id, profiles!follower_id(id, username)')
+        .eq('following_id', currentUser.uid);
+
+      if (error) {
+        Alert.alert('Error loading followers', error.message);
+        return;
+      }
+
+      const followerList = data.map((row: any) => row.profiles);
+      setFollowers(followerList);
+      checkWhoIFollowBack(followerList.map((user) => user.id));
+    };
+
+    const checkWhoIFollowBack = async (ids: string[]) => {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.uid)
+        .in('following_id', ids);
+
+      if (error) return console.error(error);
+
+      const map: Record<string, boolean> = {};
+      ids.forEach((id) => {
+        map[id] = data.some((d) => d.following_id === id);
+      });
+      setFollowBackMap(map);
+    };
+
+    fetchFollowers();
+  }, []);
+
+  const followBack = async (targetId: string) => {
+    const { error } = await supabase.from('follows').insert({
+      follower_id: currentUser?.uid,
+      following_id: targetId,
+    });
+
+    if (error) {
+      Alert.alert('Follow Back Error', error.message);
+      return;
+    }
+
+    setFollowBackMap((prev) => ({ ...prev, [targetId]: true }));
+  };
+
   return (
     <View style={styles.container}>
-      <View style={[styles.translucentWrapper, { height: containerHeight }]}>
-              <View style={styles.row}>
-                <Button title="Followers" onPress={() => router.push('/buddyfindtabs/findbuddy')} />
-              </View>
-              
-            </View>
+      <ScrollView>
+        {followers.map((user) => (
+          <View key={user.id} style={styles.card}>
+            <Text style={styles.username}>{user.username}</Text>
+            {!followBackMap[user.id] && (
+              <TouchableOpacity
+                style={styles.followBackBtn}
+                onPress={() => followBack(user.id)}
+              >
+                <Text style={styles.followBackText}>Follow Back</Text>
+              </TouchableOpacity>
+            )}
+            {followBackMap[user.id] && (
+              <Text style={styles.followingLabel}>Following</Text>
+            )}
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -22,49 +99,40 @@ export default function followers() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    backgroundColor: '#1c1c1e',
+    padding: 16,
   },
-  text: {
-    color: '#fff',
+  heading: {
+    color: '#ffd33d',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
- link: {
-    fontSize: 20,
-    textDecorationLine: 'underline',
-    color: '#fff',
-    marginTop: 10,
-  },
-  buttonContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
-    justifyContent: 'space-evenly',
-  },
-  row: {
+  card: {
+    backgroundColor: '#2c2c2e',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 3,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  buttonBox: {
-    flex: 1,
-    margin: 0,
-    padding: 0,
-    borderWidth: 1,
-    borderColor: '#ffffff55',
-    borderRadius:10,
-    justifyContent: 'center',
-   alignItems: 'center', 
+  username: {
+    color: '#fff',
+    fontSize: 16,
   },
-  translucentWrapper: {
-  width: '100%',
-  padding: 0,
-  backgroundColor: 'rgba(255, 255, 255, 0.1)', // translucent white
-  borderColor: '#ffffff88', // translucent white border
-  borderWidth: 1,
-  borderRadius: 10,
-  alignSelf: 'center',
-  alignItems: 'center',
-  justifyContent: 'center'
-},
+  followBackBtn: {
+    backgroundColor: '#ffd33d',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  followBackText: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  followingLabel: {
+    color: 'green',
+    fontWeight: 'bold',
+  },
 });
-

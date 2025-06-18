@@ -11,6 +11,8 @@ import { wp, hp } from '../../helpers/common'
 import Input from '../../components/Input'
 
 import auth from '@react-native-firebase/auth';
+//import auth from '@react-native-firebase/auth';
+import { supabase } from '../../utils/supabase';
 
 const SignUp = () => {
   const router = useRouter();
