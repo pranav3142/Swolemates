@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
+import auth from '@react-native-firebase/auth';
 import {
   Image,
   LayoutAnimation,
@@ -132,15 +133,34 @@ export default function ProfileScreen() {
               <Ionicons name="pencil" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.name}>Amos Loh</Text>
-          <Text style={styles.username}>@holsoma</Text>
+          {auth().currentUser && (
+            <>
+              <Text style={styles.name}>{auth().currentUser.displayName || 'Unnamed User'}</Text>
+              <Text style={styles.username}>@{auth().currentUser.email?.split('@')[0]}</Text>
+            </>
+          )}
+        </View>
+
+        <View style={styles.followWrapper}>
+          <View style={styles.followContainer}>
+            <Pressable onPress={() => router.push('../followingtabs/followers')} style={styles.followButton}>
+              <Text style={styles.followText}>Followers</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push('../followingtabs/following')} style={styles.followButton}>
+              <Text style={styles.followText}>Following</Text>
+            </Pressable>
+          </View>
         </View>
 
         {items.map((item, index) => (
           <View key={index}>
             <TouchableOpacity style={styles.item} onPress={() => toggleSection(index)}>
               <Text style={styles.itemText}>{item.title}</Text>
-              <Ionicons name={activeSections[index] ? 'chevron-down' : 'chevron-forward'} size={20} color="#555" />
+              <Ionicons
+                name={activeSections[index] ? 'chevron-down' : 'chevron-forward'}
+                size={20}
+                color="#555"
+              />
             </TouchableOpacity>
             <Collapsible collapsed={!activeSections[index]}>
               {item.renderContent()}
@@ -149,9 +169,9 @@ export default function ProfileScreen() {
         ))}
 
         <TouchableOpacity style={styles.logoutButton}>
-         <Pressable onPress={()=> router.push('../(auth)/welcome')}>
-        <Text style={styles.logoutText}>Logout</Text>        
-        </Pressable>
+          <Pressable onPress={() => router.push('../(auth)/welcome')}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </Pressable>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -185,6 +205,26 @@ const styles = StyleSheet.create({
   },
   name: { fontSize: 20, fontWeight: '700', marginTop: 8, color: '#fff' },
   username: { color: '#ffd33d', fontSize: 14 },
+  followWrapper: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  followContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  followButton: {
+    backgroundColor: '#ffd33d',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginHorizontal: 8,
+  },
+  followText: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
   item: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -243,4 +283,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#DA9E44',
   },
 });
-
