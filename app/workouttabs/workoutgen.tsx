@@ -11,6 +11,7 @@ export default function ExGen() {
   const [equipment, setEquipment] = useState('');
   const [time, setTime] = useState('');
   const [currentFitnessLevel, setCurrentFitnessLevel] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [generatedWorkout, setGeneratedWorkout] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const API_KEY = "AIzaSyAtSZZ9qDp00JG-Wie6hV5pUwZE-kwGey8";
@@ -40,8 +41,6 @@ export default function ExGen() {
     setGeneratedWorkout(''); // Clear previous workout
 
     try {
-      // THIS IS WHERE YOU'LL INTEGRATE YOUR LLM API CALL
-      // For now, simulating a response
       const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash'}); //	models/gemini-2.5-flash-preview-05-20
       const userPrompt = `
         Generate a workout plan based on the following user preferences:
@@ -49,15 +48,16 @@ export default function ExGen() {
         - Available Equipment: ${equipment}
         - Time Available: ${time}
         - Current Fitness Level: ${currentFitnessLevel}
+        - Additional Remarks ${remarks}
 
-        Please provide a structured workout plan, including:
-        - Warm-up
-        - Main Workout (list of exercises with sets and reps/duration)
-        - Cool-down
 
-        Format the output as a readable text, possibly using markdown for headings and bullet points.
+
+        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate, when calulating time, assume a minute is needed to complete each set of exercise
         `;
-
+        // Please provide a structured workout plan, including:
+        // - Warm-up
+        // - Main Workout (list of exercises with sets and reps/duration)
+        // - Cool-down
       console.log("Sending prompt to Gemini API", userPrompt);
 
       const result = await model.generateContent(userPrompt);
@@ -79,7 +79,7 @@ export default function ExGen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.title}>AI Workout Generator</Text>
 
-      <Text style={styles.label}>Your Fitness Goals (e.g., "lose weight, build muscle, improve endurance"):</Text>
+      <Text style={styles.label}>Your Fitness Goals (e.g., "Lose weight, Build muscle, Bigger biceps"):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your goals"
@@ -89,7 +89,7 @@ export default function ExGen() {
         multiline // Allow multiple lines of input
       />
 
-      <Text style={styles.label}>Available Equipment (e.g., "dumbbells, resistance bands, no equipment"):</Text>
+      <Text style={styles.label}>Available Equipment (e.g., "Dumbbells, Resistance bands, No equipment"):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter available equipment"
@@ -114,6 +114,15 @@ export default function ExGen() {
         placeholderTextColor= {theme.colors.textGray}
         value={currentFitnessLevel}
         onChangeText={setCurrentFitnessLevel}
+      />
+
+      <Text style={styles.label}>Current Fitness Level (e.g. "low intensity, HIIT, yoga"):</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter any additional remarks"
+        placeholderTextColor= {theme.colors.textGray}
+        value={remarks}
+        onChangeText={setRemarks}
       />
 
       <TouchableOpacity
