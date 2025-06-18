@@ -84,8 +84,9 @@ const toggleDetails = (id: string) => {
   {workouts.map((workout, index) => (
     <View key={workout.id || index} style={{ backgroundColor: '#303030', padding: 12, borderRadius: 8, marginBottom: 12 }}>
       <Text style={{ color: '#ffd33d', fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>
-           {workout.user_id} : {workout.name || "No name"} — {new Date(workout.timestamp).toLocaleDateString()}
+        {workout.user_name || "Unknown User"} : {workout.name || "No name"} — {new Date(workout.timestamp).toLocaleDateString()}
       </Text>
+
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <TouchableOpacity onPress={() => toggleDetails(workout.id)}>

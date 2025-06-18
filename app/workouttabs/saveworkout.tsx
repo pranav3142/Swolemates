@@ -60,6 +60,7 @@ export default function SaveWorkout() {
 
     const { error } = await supabase.from('workouts').insert({
       user_id: currentUser.uid,
+      user_name: auth().currentUser.displayName,
       data: workoutData,
       name,
       description,
