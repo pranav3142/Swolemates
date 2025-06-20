@@ -52,8 +52,8 @@ export default function ExGen() {
 
 
 
-        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate
-        For number of sets, 1.5 minutes per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 8 sets of 3 minutes each, or 6 sets of 5 minutes each, etc.
+        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate, suggest rest time between sets,
+        For number of sets, 1.5 minutes per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 10 sets of 3 minutes each. ensure more rest time according to the user's fitness level, with minimally 90 seconds of rest, unless it is a HIIT workout, if there are per arm workouts, ensure fewer sets or shorter rest accordingly
         `;
         // Please provide a structured workout plan, including:
         // - Warm-up
