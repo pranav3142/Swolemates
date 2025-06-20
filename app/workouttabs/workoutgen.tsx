@@ -52,7 +52,8 @@ export default function ExGen() {
 
 
 
-        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate, when calulating time, assume a minute is needed to complete each set of exercise
+        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate
+        For number of sets, 1.5 minutes per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 8 sets of 3 minutes each, or 6 sets of 5 minutes each, etc.
         `;
         // Please provide a structured workout plan, including:
         // - Warm-up
