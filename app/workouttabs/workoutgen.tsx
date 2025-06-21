@@ -3,6 +3,7 @@ import { useNavigation } from 'expo-router';
 import React, { useState, useLayoutEffect} from 'react';
 import { theme } from '@/constants/themes';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import BouncyCheckbox from "react-native-bouncy-checkbox";
 
 export default function ExGen() {
   const navigation = useNavigation();
@@ -12,6 +13,8 @@ export default function ExGen() {
   const [time, setTime] = useState('');
   const [currentFitnessLevel, setCurrentFitnessLevel] = useState('');
   const [remarks, setRemarks] = useState('');
+  const [warmUp, setWarmUp] = useState(false);
+  const [coolDown, setCoolDown] = useState(false);
   const [generatedWorkout, setGeneratedWorkout] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const API_KEY = "AIzaSyAtSZZ9qDp00JG-Wie6hV5pUwZE-kwGey8";
@@ -22,7 +25,7 @@ export default function ExGen() {
     navigation.setOptions({
       title: 'Generate Workout',
       headerStyle: {
-        backgroundColor: '#25292e',
+        backgroundColor: '#25292e'
       },
       headerTintColor: '#fff',
       headerTitleStyle: {
@@ -30,7 +33,6 @@ export default function ExGen() {
       }
     });
   }, [navigation]);
-  // --- Placeholder for LLM API call (will replace this with actual API integration later) ---
   const handleGenerateWorkout = async () => {
     if (!goals || !equipment || !time || !currentFitnessLevel) {
       Alert.alert('Missing Information', 'Please fill in all fields to generate a workout.');
@@ -49,6 +51,8 @@ export default function ExGen() {
         - Time Available: ${time}
         - Current Fitness Level: ${currentFitnessLevel}
         - Additional Remarks ${remarks}
+        - Warm up: ${warmUp}
+        - Cool down: ${coolDown}
 
 
 
@@ -80,7 +84,9 @@ export default function ExGen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.title}>AI Workout Generator</Text>
 
-      <Text style={styles.label}>Your Fitness Goals (e.g., "Lose weight, Build muscle, Bigger biceps"):</Text>
+      <Text style={styles.label}>Your Fitness Goals 
+        {"\n"}
+        (Lose weight, Build muscle, Bigger biceps, etc.):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your goals"
@@ -90,7 +96,9 @@ export default function ExGen() {
         multiline // Allow multiple lines of input
       />
 
-      <Text style={styles.label}>Available Equipment (e.g., "Dumbbells, Resistance bands, No equipment"):</Text>
+      <Text style={styles.label}>Available Equipment 
+        {"\n"}
+        (Dumbbells, Resistance bands, No equipment, etc.):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter available equipment"
@@ -99,7 +107,7 @@ export default function ExGen() {
         onChangeText={setEquipment}
       />
 
-      <Text style={styles.label}>Time Available for Workout (e.g., "30 minutes, 1 hour"):</Text>
+      <Text style={styles.label}>Time Available for Workout (30 minutes, 1 hour, etc.):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter time available"
@@ -108,7 +116,9 @@ export default function ExGen() {
         onChangeText={setTime}
       />
 
-      <Text style={styles.label}>Current Fitness Level (e.g., "beginner, intermediate, advanced"):</Text>
+      <Text style={styles.label}>Current Fitness Level 
+        {"\n"}
+        (Beginner, Intermediate, Advanced):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your fitness level"
@@ -117,13 +127,41 @@ export default function ExGen() {
         onChangeText={setCurrentFitnessLevel}
       />
 
-      <Text style={styles.label}>Current Fitness Level (e.g. "low intensity, HIIT, yoga"):</Text>
+      <Text style={styles.label}>Additional Remarks
+        {"\n"}
+        (Low intensity, HIIT, Yoga, etc.):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter any additional remarks"
         placeholderTextColor= {theme.colors.textGray}
         value={remarks}
         onChangeText={setRemarks}
+      />
+
+      <BouncyCheckbox
+        size={25}
+        fillColor="orange"
+        unFillColor="#1c1c1e"
+        text="Warm up"
+        iconStyle={{ borderColor: "red" }}
+        innerIconStyle={{ borderWidth: 2 }}
+        textStyle={{ fontFamily: "JosefinSans-Regular" }}
+        isChecked={warmUp}
+        onPress={(isChecked: boolean) => {setWarmUp(isChecked)}}
+        paddingBottom ={10}
+      />
+
+      <BouncyCheckbox
+        size={25}
+        fillColor="orange"
+        unFillColor="#1c1c1e"
+        text="Cool down"
+        iconStyle={{ borderColor: "red" }}
+        innerIconStyle={{ borderWidth: 2 }}
+        textStyle={{ fontFamily: "JosefinSans-Regular" }}
+        isChecked={coolDown}
+        onPress={(isChecked: boolean) => {setCoolDown(isChecked)}}
+        paddingBottom ={5}
       />
 
       <TouchableOpacity
@@ -183,7 +221,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top', // Align text to the top for multiline
   },
   button: {
-    backgroundColor: theme.colors.primary, 
+    backgroundColor: theme.colors.primaryDark, 
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
