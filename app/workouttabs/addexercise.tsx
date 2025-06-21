@@ -1,25 +1,15 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  Button,
-  ActivityIndicator,
-  TouchableOpacity,
-  Switch,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Button, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
-import auth from '@react-native-firebase/auth';
-import { supabase } from '../../utils/supabase';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 interface Exercise {
   name: string;
   type: string;
   muscle: string;
   equipment: string;
-  difficulty?: string;
+  difficulty: string;
   instructions: string;
 }
 
@@ -33,11 +23,9 @@ export default function Exercises() {
   const [queryParam, setQueryParam] = useState<'name' | 'muscle' | 'type' | 'difficulty' | 'equipment'>('name');
   const [searchValue, setSearchValue] = useState('');
   const [exercises, setExercises] = useState<Exercise[] | null>(null);
-  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [useCustom, setUseCustom] = useState(false);
 
   const previousList: Exercise[] = currentList ? JSON.parse(currentList as string) : [];
 
@@ -53,16 +41,33 @@ export default function Exercises() {
     });
   };
 
+
+
+
+
   const apiKey = '5uSqRB/Dod0jN38Kkj3MJg==A8ztw8uyaP3IiIaU';
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: 'Add an Exercise',
-      headerStyle: { backgroundColor: '#25292e' },
-      headerTintColor: '#fff',
-      headerBackVisible: false,
-    });
-  }, [navigation]);
+const handleHeaderBack = () => {
+  router.replace({
+    pathname: '/workouttabs/startworkout',
+    params: { selectedExercise: JSON.stringify(previousList) }
+  });
+};
+
+useLayoutEffect(() => {
+  navigation.setOptions({
+    title: 'Add an Exercise',
+    headerStyle: { backgroundColor: '#25292e' },
+    headerTintColor: '#fff',
+    headerBackVisible: false,
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleHeaderBack} style={{ paddingHorizontal: 16 }}>
+        <Ionicons name={'chevron-back-outline'} color={'white'} size={24} />
+      </TouchableOpacity>
+    ),
+  });
+}, [navigation, previousList]);
+
 
   const fetchExercises = async () => {
     try {
@@ -93,124 +98,51 @@ export default function Exercises() {
     }
   };
 
-  useEffect(() => {
-    const fetchCustomExercises = async () => {
-      const user = auth().currentUser;
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('custom_exercises')
-        .select('*')
-        .eq('user_id', user.uid)
-        .order('created_at', { ascending: false });
-
-      if (error) console.error('Error fetching custom exercises:', error.message);
-      else setCustomExercises(data);
-    };
-
-    if (useCustom) fetchCustomExercises();
-  }, [useCustom]);
-
   return (
     <View style={styles.container}>
-      
-
-      <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Custom Exercises</Text>
-        <Switch
-          value={useCustom}
-          onValueChange={setUseCustom}
-          trackColor={{ false: '#777', true: '#ffd33d' }}
-          thumbColor={useCustom ? '#fff' : '#ccc'}
-        />
-
-        
+      <Text style={styles.label}>Choose Parameter:</Text>
+      <View style={styles.paramRow}>
+        {PARAMS.map(param => (
+          <TouchableOpacity
+            key={param}
+            style={[styles.paramButton, queryParam === param && styles.activeParam]}
+            onPress={() => setQueryParam(param)}
+          >
+            <Text style={styles.paramText}>{param}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
-      <Text style={styles.label}>Choose Exercise:</Text>
 
-      {!useCustom && (
-        <>
-          <View style={styles.paramRow}>
-            {PARAMS.map(param => (
-              <TouchableOpacity
-                key={param}
-                style={[styles.paramButton, queryParam === param && styles.activeParam]}
-                onPress={() => setQueryParam(param)}
-              >
-                <Text style={styles.paramText}>{param}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <TextInput
+        placeholder={`Enter ${queryParam}`}
+        placeholderTextColor="#aaa"
+        style={styles.input}
+        value={searchValue}
+        onChangeText={setSearchValue}
+      />
 
-          <TextInput
-            placeholder={`Enter ${queryParam}`}
-            placeholderTextColor="#aaa"
-            style={styles.input}
-            value={searchValue}
-            onChangeText={setSearchValue}
-          />
-
-          <Button title="Search" onPress={fetchExercises} color="#fff" />
-        </>
-      )}
-
-      {useCustom && (
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname: '/workouttabs/customex',
-              params: { currentList: JSON.stringify(previousList) },
-            })
-          }
-          style={{
-            backgroundColor: '#ffd33d',
-            paddingVertical: 10,
-            borderRadius: 6,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: '#000', fontWeight: 'bold', textAlign: 'center' }}>
-            ➕ Create Custom Exercise
-          </Text>
-        </TouchableOpacity>
-      )}
+      <Button title="Search" onPress={fetchExercises} color="#1c1c1e" />
 
       {loading && <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />}
       {error && <Text style={styles.text}>Error: {error}</Text>}
 
-      {useCustom ? (
+      {exercises && (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {customExercises.map((ex, index) => (
+          {exercises.map((ex, index) => (
             <TouchableOpacity key={index} onPress={() => selectExercise(ex)} activeOpacity={0.8}>
               <View style={styles.card}>
                 <Text style={styles.title}>{ex.name}</Text>
                 <Text style={styles.text}>Muscle: {ex.muscle}</Text>
                 <Text style={styles.text}>Type: {ex.type}</Text>
                 <Text style={styles.text}>Equipment: {ex.equipment}</Text>
-                <Text style={styles.text}>Instructions: {ex.instructions}</Text>
+                <Text style={styles.text}>Difficulty: {ex.difficulty}</Text>
+                {expandedIndex === index && (
+                  <Text style={[styles.text, { marginTop: 8 }]}>Instructions: {ex.instructions}</Text>
+                )}
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
-      ) : (
-        exercises && (
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            {exercises.map((ex, index) => (
-              <TouchableOpacity key={index} onPress={() => selectExercise(ex)} activeOpacity={0.8}>
-                <View style={styles.card}>
-                  <Text style={styles.title}>{ex.name}</Text>
-                  <Text style={styles.text}>Muscle: {ex.muscle}</Text>
-                  <Text style={styles.text}>Type: {ex.type}</Text>
-                  <Text style={styles.text}>Equipment: {ex.equipment}</Text>
-                  <Text style={styles.text}>Difficulty: {ex.difficulty}</Text>
-                  {expandedIndex === index && (
-                    <Text style={[styles.text, { marginTop: 8 }]}>Instructions: {ex.instructions}</Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )
       )}
     </View>
   );
@@ -226,7 +158,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 6,
     fontWeight: 'bold',
-    fontSize: 16,
   },
   paramRow: {
     flexDirection: 'row',
@@ -273,16 +204,5 @@ const styles = StyleSheet.create({
   text: {
     color: '#fff',
     marginBottom: 2,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  switchLabel: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

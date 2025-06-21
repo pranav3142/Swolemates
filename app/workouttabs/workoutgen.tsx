@@ -1,12 +1,23 @@
 import { Text, View, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation } from 'expo-router';
+import { useNavigation , useRouter} from 'expo-router';
 import React, { useState, useLayoutEffect} from 'react';
 import { theme } from '@/constants/themes';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 
+interface GenEx {
+    name: string;
+    type: string;
+    muscle: string;
+    equipment: string;
+    difficulty: string;
+    instructions: string; 
+    sets?: { reps: string; weight: string; }[]; 
+}
+
 export default function ExGen() {
   const navigation = useNavigation();
+  const router = useRouter();
 
   const [goals, setGoals] = useState('');
   const [equipment, setEquipment] = useState('');
@@ -56,8 +67,27 @@ export default function ExGen() {
 
 
 
-        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate, suggest rest time between sets,
+        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate, suggest rest time between sets, do not give a range for any values (including number of sets, reps or rest time),
         For number of sets, 1.5 minutes per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 10 sets of 3 minutes each. ensure more rest time according to the user's fitness level, with minimally 90 seconds of rest, unless it is a HIIT workout, if there are per arm workouts, ensure fewer sets or shorter rest accordingly
+        Then, structure the workout plan as follows:
+        Exercise Name: [Name]
+        Sets/Reps: [e.g., 3 sets of 10 reps]
+        Rest: [e.g., 90 seconds]
+        Weight: [e.g., 20kg, 60kg]
+
+        Example Format:
+        Workout:
+        Exercise Name: Single Leg Press
+        Sets/Reps: 3 sets of 10 reps
+        Weight: 40kg
+        Rest: 90 seconds
+
+        Exercise Name: Barbell Full Squat
+        Sets/Reps: 4 sets of 6 reps
+        Weight: 80kg
+        Rest: 120 seconds
+
+        Ensure the workout is balanced, targeting all major muscle groups, and suitable for the user's fitness level.
         `;
         // Please provide a structured workout plan, including:
         // - Warm-up
@@ -78,6 +108,85 @@ export default function ExGen() {
       setIsLoading(false);
     }
     };
+
+
+  const handleSaveGeneratedWorkout = () => {
+    if (!generatedWorkout) {
+      Alert.alert('No Workout', 'Please generate a workout first.');
+      return;
+    }
+
+    const lines = generatedWorkout.split('\n').filter(line => line.trim() !== '');
+    const newWorkoutList: GenEx[] = [];
+    let currentExercise: GenEx | null = null;
+    let inWorkoutSection = false;
+
+    lines.forEach(line => {
+      const lowerLine = line.toLowerCase();
+
+      if (lowerLine.includes('workout:')) {
+        inWorkoutSection = true;
+        return; // Skip the "Workout:" header itself
+      }
+      if (lowerLine.includes('warm-up:') || lowerLine.includes('cool-down:')) {
+          inWorkoutSection = false; // Exit main workout section
+          currentExercise = null; // Reset current exercise
+          return;
+      }
+
+      if (inWorkoutSection) {
+          if (lowerLine.startsWith('exercise name:')) {
+              if (currentExercise) {
+                  newWorkoutList.push(currentExercise); // Save previous exercise
+              }
+              const name = line.substring('Exercise Name:'.length).trim();
+              currentExercise = {
+                  name,
+                  type: 'Unknown', // Placeholder, you might need more sophisticated parsing
+                  muscle: 'Unknown', // Placeholder
+                  equipment: 'Unknown', // Placeholder
+                  difficulty: 'Unknown', // Placeholder
+                  instructions: '', // Instructions are tricky to parse from a simple line
+                  sets: [] // Initialize sets
+              };
+          } else if (currentExercise) {
+              if (lowerLine.startsWith('sets/reps:')) {
+                  const setsRepsText = line.substring('Sets/Reps:'.length).trim();
+                  // A very basic attempt to parse sets/reps. This might need to be more robust.
+                  // For example, "3 sets of 10-12 reps" -> add 3 empty sets.
+                  const setsMatch = setsRepsText.match(/(\d+)\s+sets?/i);
+                  const defaultReps = setsRepsText.includes('reps') ? setsRepsText.split('reps')[0].trim() : '';
+
+                  const numberOfSets = setsMatch ? parseInt(setsMatch[1], 10) : 1; // Default to 1 set if not found
+                  for (let i = 0; i < numberOfSets; i++) {
+                      currentExercise.sets?.push({ reps: defaultReps || 'N/A', weight: '' });
+                  }
+              } else if (lowerLine.startsWith('rest:')) {
+                  // You could store rest time if you extend the Exercise interface
+              } else if (lowerLine.startsWith('weight:')) {
+                  const weightText = line.substring('Weight:'.length).trim();
+                  // This is a simplified approach: apply the same weight to all current sets
+                  if (currentExercise.sets) {
+                      currentExercise.sets.forEach(set => set.weight = weightText);
+                  }
+              }
+              // Add other parsing logic for muscle, type, equipment if the AI outputs them similarly
+          }
+      }
+    });
+
+    if (currentExercise) {
+        newWorkoutList.push(currentExercise); // Add the last exercise
+    }
+
+    console.log("Parsed Workout List:", JSON.stringify(newWorkoutList, null, 2));
+
+    // Navigate to the workout logging screen, passing the parsed exercise list
+    router.push({
+      pathname: '/workouttabs/startworkout', // Make sure this path is correct
+      params: { selectedExercise: JSON.stringify(newWorkoutList) },
+    });
+  };
 
   return (
     // Using ScrollView to ensure content is scrollable if it exceeds screen height
@@ -178,8 +287,13 @@ export default function ExGen() {
       {generatedWorkout ? (
         <View style={styles.workoutContainer}>
           <Text style={styles.workoutTitle}>Your Personalized Workout:</Text>
-          {/* We'll eventually use a markdown parser here if the LLM returns markdown */}
           <Text style={styles.workoutText}>{generatedWorkout}</Text>
+          <TouchableOpacity
+            style={[styles.button, { marginTop: 15, backgroundColor: '#ffd33d' }]} // Add a new button style
+            onPress={handleSaveGeneratedWorkout}
+          >
+            <Text style={[styles.buttonText, { color: '#000' }]}>Use This Workout</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
     </ScrollView>
