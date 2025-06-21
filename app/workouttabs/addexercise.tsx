@@ -150,30 +150,7 @@ export default function Exercises() {
             onChangeText={setSearchValue}
           />
 
-          <Button title="Search" onPress={fetchExercises} color="#fff" />
-        </>
-      )}
-
-      {useCustom && (
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname: '/workouttabs/customex',
-              params: { currentList: JSON.stringify(previousList) },
-            })
-          }
-          style={{
-            backgroundColor: '#ffd33d',
-            paddingVertical: 10,
-            borderRadius: 6,
-            marginBottom: 16,
-          }}
-        >
-          <Text style={{ color: '#000', fontWeight: 'bold', textAlign: 'center' }}>
-            ➕ Create Custom Exercise
-          </Text>
-        </TouchableOpacity>
-      )}
+      <Button title="Search" onPress={fetchExercises} color="#1c1c1e" />
 
       {loading && <ActivityIndicator size="large" color="#fff" style={{ marginTop: 16 }} />}
       {error && <Text style={styles.text}>Error: {error}</Text>}
