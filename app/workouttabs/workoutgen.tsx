@@ -11,8 +11,8 @@ interface GenEx {
     muscle: string;
     equipment: string;
     difficulty: string;
-    instructions: string; 
-    sets?: { reps: string; weight: string; }[]; 
+    instructions: string;
+    sets?: { reps: string; weight: string; }[];
 }
 
 export default function ExGen() {
@@ -44,6 +44,7 @@ export default function ExGen() {
       }
     });
   }, [navigation]);
+
   const handleGenerateWorkout = async () => {
     if (!goals || !equipment || !time || !currentFitnessLevel) {
       Alert.alert('Missing Information', 'Please fill in all fields to generate a workout.');
@@ -54,7 +55,7 @@ export default function ExGen() {
     setGeneratedWorkout(''); // Clear previous workout
 
     try {
-      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash'}); //	models/gemini-2.5-flash-preview-05-20
+      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash'}); // models/gemini-2.5-flash-preview-05-20
       const userPrompt = `
         Generate a workout plan based on the following user preferences:
         - Goals: ${goals}
@@ -65,34 +66,31 @@ export default function ExGen() {
         - Warm up: ${warmUp}
         - Cool down: ${coolDown}
 
-
-
-        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights if appropriate, suggest rest time between sets, do not give a range for any values (including number of sets, reps or rest time),
+        Output as plain text, all same font size and unbolded, being as concise as possible without unncessary information, provide purely sets, reps and weights, and rest time between sets, give definite values, do not give a range for any values (including number of sets, reps or rest time),
+        Ensure the workout is balanced, targeting all parts of the muscle group if the user had stated, and suitable for the user's fitness level.
         For number of sets, 1.5 minutes per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 10 sets of 3 minutes each. ensure more rest time according to the user's fitness level, with minimally 90 seconds of rest, unless it is a HIIT workout, if there are per arm workouts, ensure fewer sets or shorter rest accordingly
         Then, structure the workout plan as follows:
         Exercise Name: [Name]
-        Sets/Reps: [e.g., 3 sets of 10 reps]
+        Sets: [e.g., 3]
+        Reps: [e.g., 12]
         Rest: [e.g., 90 seconds]
         Weight: [e.g., 20kg, 60kg]
 
         Example Format:
         Workout:
         Exercise Name: Single Leg Press
-        Sets/Reps: 3 sets of 10 reps
+        Sets: 3
+        Reps: 10
         Weight: 40kg
         Rest: 90 seconds
 
         Exercise Name: Barbell Full Squat
-        Sets/Reps: 4 sets of 6 reps
+        Sets: 4
+        Reps: 6
         Weight: 80kg
         Rest: 120 seconds
 
-        Ensure the workout is balanced, targeting all major muscle groups, and suitable for the user's fitness level.
         `;
-        // Please provide a structured workout plan, including:
-        // - Warm-up
-        // - Main Workout (list of exercises with sets and reps/duration)
-        // - Cool-down
       console.log("Sending prompt to Gemini API", userPrompt);
 
       const result = await model.generateContent(userPrompt);
@@ -103,11 +101,11 @@ export default function ExGen() {
       setGeneratedWorkout(text);
     } catch (error) {
       console.error('Error generating workout:', error);
-      Alert.alert('Error', 'Failed  to generate workout. Please check your internet connection.');
+      Alert.alert('Error', 'Failed to generate workout. Please check your internet connection.');
     } finally {
       setIsLoading(false);
     }
-    };
+  };
 
 
   const handleSaveGeneratedWorkout = () => {
@@ -120,93 +118,92 @@ export default function ExGen() {
     const newWorkoutList: GenEx[] = [];
     let currentExercise: GenEx | null = null;
     let inWorkoutSection = false;
+    let currentReps: string = 'N/A'; // Store reps value to apply to each set
 
     lines.forEach(line => {
       const lowerLine = line.toLowerCase();
 
       if (lowerLine.includes('workout:')) {
         inWorkoutSection = true;
-        return; // Skip the "Workout:" header itself
+        return;
       }
       if (lowerLine.includes('warm-up:') || lowerLine.includes('cool-down:')) {
-          inWorkoutSection = false; // Exit main workout section
-          currentExercise = null; // Reset current exercise
+          inWorkoutSection = false;
+          currentExercise = null;
           return;
       }
 
       if (inWorkoutSection) {
           if (lowerLine.startsWith('exercise name:')) {
               if (currentExercise) {
-                  newWorkoutList.push(currentExercise); // Save previous exercise
+                  newWorkoutList.push(currentExercise);
               }
               const name = line.substring('Exercise Name:'.length).trim();
               currentExercise = {
                   name,
-                  type: 'Unknown', // Placeholder, you might need more sophisticated parsing
-                  muscle: 'Unknown', // Placeholder
-                  equipment: 'Unknown', // Placeholder
-                  difficulty: 'Unknown', // Placeholder
-                  instructions: '', // Instructions are tricky to parse from a simple line
-                  sets: [] // Initialize sets
+                  type: 'Unknown',
+                  muscle: 'Unknown',
+                  equipment: 'Unknown',
+                  difficulty: 'Unknown',
+                  instructions: '',
+                  sets: []
               };
+              currentReps = 'N/A'; // Reset reps for the new exercise
           } else if (currentExercise) {
-              if (lowerLine.startsWith('sets/reps:')) {
-                  const setsRepsText = line.substring('Sets/Reps:'.length).trim();
-                  // A very basic attempt to parse sets/reps. This might need to be more robust.
-                  // For example, "3 sets of 10-12 reps" -> add 3 empty sets.
-                  const setsMatch = setsRepsText.match(/(\d+)\s+sets?/i);
-                  const defaultReps = setsRepsText.includes('reps') ? setsRepsText.split('reps')[0].trim() : '';
+              if (lowerLine.startsWith('sets:')) {
+                  const setsText = line.substring('Sets:'.length).trim();
+                  const numberOfSets = parseInt(setsText, 10);
 
-                  const numberOfSets = setsMatch ? parseInt(setsMatch[1], 10) : 1; // Default to 1 set if not found
+                  // Create sets based on the number of sets, using the stored 'currentReps'
                   for (let i = 0; i < numberOfSets; i++) {
-                      currentExercise.sets?.push({ reps: defaultReps || 'N/A', weight: '' });
+                      currentExercise.sets?.push({ reps: currentReps, weight: '' });
+                  }
+              } else if (lowerLine.startsWith('reps:')) {
+                  currentReps = line.substring('Reps:'.length).trim() || 'N/A'; // Update currentReps
+                  // If sets were already defined, update them with the new reps value
+                  if (currentExercise.sets && currentExercise.sets.length > 0) {
+                      currentExercise.sets.forEach(set => set.reps = currentReps);
                   }
               } else if (lowerLine.startsWith('rest:')) {
-                  // You could store rest time if you extend the Exercise interface
+                  // You could parse and use this if you extend your Exercise or SetEntry interface
               } else if (lowerLine.startsWith('weight:')) {
                   const weightText = line.substring('Weight:'.length).trim();
-                  // This is a simplified approach: apply the same weight to all current sets
                   if (currentExercise.sets) {
                       currentExercise.sets.forEach(set => set.weight = weightText);
                   }
               }
-              // Add other parsing logic for muscle, type, equipment if the AI outputs them similarly
           }
       }
     });
 
     if (currentExercise) {
-        newWorkoutList.push(currentExercise); // Add the last exercise
+        newWorkoutList.push(currentExercise);
     }
 
     console.log("Parsed Workout List:", JSON.stringify(newWorkoutList, null, 2));
 
-    // Navigate to the workout logging screen, passing the parsed exercise list
     router.push({
-      pathname: '/workouttabs/startworkout', // Make sure this path is correct
+      pathname: '/workouttabs/startworkout',
       params: { selectedExercise: JSON.stringify(newWorkoutList) },
     });
   };
 
   return (
-    // Using ScrollView to ensure content is scrollable if it exceeds screen height
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.title}>AI Workout Generator</Text>
 
-      <Text style={styles.label}>Your Fitness Goals 
-        {"\n"}
+      <Text style={styles.label}>Your Fitness Goals {"\n"}
         (Lose weight, Build muscle, Bigger biceps, etc.):</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your goals"
-        placeholderTextColor= {theme.colors.textGray} // Make placeholder text visible on dark background
+        placeholderTextColor= {theme.colors.textGray}
         value={goals}
         onChangeText={setGoals}
-        multiline // Allow multiple lines of input
+        multiline
       />
 
-      <Text style={styles.label}>Available Equipment 
-        {"\n"}
+      <Text style={styles.label}>Available Equipment{"\n"}
         (Dumbbells, Resistance bands, No equipment, etc.):</Text>
       <TextInput
         style={styles.input}
@@ -225,8 +222,7 @@ export default function ExGen() {
         onChangeText={setTime}
       />
 
-      <Text style={styles.label}>Current Fitness Level 
-        {"\n"}
+      <Text style={styles.label}>Current Fitness Level {"\n"}
         (Beginner, Intermediate, Advanced):</Text>
       <TextInput
         style={styles.input}
@@ -254,7 +250,7 @@ export default function ExGen() {
         text="Warm up"
         iconStyle={{ borderColor: "red" }}
         innerIconStyle={{ borderWidth: 2 }}
-        textStyle={{ fontFamily: "JosefinSans-Regular" }}
+        textStyle={{ fontFamily: "JosefinSans-Regular", color: theme.colors.textGray }}
         isChecked={warmUp}
         onPress={(isChecked: boolean) => {setWarmUp(isChecked)}}
         paddingBottom ={10}
@@ -267,7 +263,7 @@ export default function ExGen() {
         text="Cool down"
         iconStyle={{ borderColor: "red" }}
         innerIconStyle={{ borderWidth: 2 }}
-        textStyle={{ fontFamily: "JosefinSans-Regular" }}
+        textStyle={{ fontFamily: "JosefinSans-Regular", color: theme.colors.textGray }}
         isChecked={coolDown}
         onPress={(isChecked: boolean) => {setCoolDown(isChecked)}}
         paddingBottom ={5}
@@ -289,7 +285,7 @@ export default function ExGen() {
           <Text style={styles.workoutTitle}>Your Personalized Workout:</Text>
           <Text style={styles.workoutText}>{generatedWorkout}</Text>
           <TouchableOpacity
-            style={[styles.button, { marginTop: 15, backgroundColor: '#ffd33d' }]} // Add a new button style
+            style={[styles.button, { marginTop: 15, backgroundColor: '#DA9E44' }]}
             onPress={handleSaveGeneratedWorkout}
           >
             <Text style={[styles.buttonText, { color: '#000' }]}>Use This Workout</Text>
@@ -303,39 +299,39 @@ export default function ExGen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1c1c1e', // Dark background for the screen
+    backgroundColor: '#1c1c1e',
     padding: 20,
   },
   contentContainer: {
-    paddingBottom: 40, // Add some padding to the bottom for scrollability
+    paddingBottom: 40,
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 25,
     textAlign: 'center',
-    color: theme.colors.primaryDark, // White title text
+    color: theme.colors.primaryDark,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#ccc', // Lighter grey for labels
+    color: '#ccc',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#444', // Darker border for inputs
+    borderColor: '#444',
     borderRadius: 8,
     padding: 12,
     marginBottom: 20,
     fontSize: 16,
-    backgroundColor: '#333', // Darker background for inputs
-    color: '#fff', // White input text
-    minHeight: 50, // Ensure multiline inputs are visible
-    textAlignVertical: 'top', // Align text to the top for multiline
+    backgroundColor: '#333',
+    color: '#fff',
+    minHeight: 50,
+    textAlignVertical: 'top',
   },
   button: {
-    backgroundColor: theme.colors.primaryDark, 
+    backgroundColor: theme.colors.primaryDark,
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -344,27 +340,27 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#fff',
+    color: '#fff', // Changed back to white for the main generate button
     fontSize: 18,
     fontWeight: 'bold',
   },
   workoutContainer: {
-    backgroundColor: '#333', // Dark background for workout output
+    backgroundColor: '#333',
     borderRadius: 10,
     padding: 20,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#555', // Slightly lighter border
+    borderColor: '#555',
   },
   workoutTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#fff', // White workout title
+    color: '#fff',
   },
   workoutText: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#e0e0e0', // Slightly off-white for workout text
+    color: '#e0e0e0',
   },
 });
