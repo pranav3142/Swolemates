@@ -81,6 +81,23 @@ export default function Exercises() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => router.push({
+          pathname: '/workouttabs/customex',
+          params: { currentList: JSON.stringify(previousList) }
+        })}
+        style={{
+          backgroundColor: '#ffd33d',
+          paddingVertical: 10,
+          borderRadius: 6,
+          marginBottom: 16,
+        }}
+      >
+        <Text style={{ color: '#000', fontWeight: 'bold', textAlign: 'center' }}>
+          ➕ Add a Custom Exercise
+        </Text>
+      </TouchableOpacity>
+
       <Text style={styles.label}>Choose Parameter:</Text>
       <View style={styles.paramRow}>
         {PARAMS.map(param => (
