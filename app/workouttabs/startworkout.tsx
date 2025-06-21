@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
     borderRadius: 10,
     marginTop: 12,
-  },
+  }, 
   timercontainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',

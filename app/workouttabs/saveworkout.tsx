@@ -66,7 +66,7 @@ export default function SaveWorkout() {
       description,
       timestamp: new Date(),
     });
-
+ 
     if (error) {
       Alert.alert('Save Failed', error.message);
     } else {

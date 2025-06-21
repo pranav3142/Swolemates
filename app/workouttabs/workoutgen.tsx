@@ -147,7 +147,7 @@ export default function ExGen() {
                   difficulty: 'Unknown',
                   instructions: '',
                   sets: []
-              };
+              }; 
               currentReps = 'N/A'; // Reset reps for the new exercise
           } else if (currentExercise) {
               if (lowerLine.startsWith('sets:')) {
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonText: {
-    color: '#fff', // Changed back to white for the main generate button
+    color: '#000',
     fontSize: 18,
     fontWeight: 'bold',
   },
