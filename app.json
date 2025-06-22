@@ -12,7 +12,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.abefqy.Swolemates",
       "googleServicesFile": "./GoogleService-Info.plist"
-
     },
     "android": {
       "adaptiveIcon": {
@@ -32,15 +31,14 @@
       "expo-router",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-    [
-      "expo-build-properties",
-      {
-         "ios": {
-          "useFrameworks": "static"
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
           }
         }
       ],
-
       [
         "expo-splash-screen",
         {
@@ -49,7 +47,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
