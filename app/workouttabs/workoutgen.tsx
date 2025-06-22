@@ -225,28 +225,18 @@ export default function ExGen() {
                 onChangeText={setEquipment}
             />
 
-            <Text style={styles.label}>Time Available for Workout:</Text>
-            <View style={styles.sliderSection}>
-                <Text style={styles.sliderValueText}>{timeInMinutes} min</Text>
-                <Slider
-                    theme={{
-                        minimumTrackTintColor: '#DA9E44',
-                        maximumTrackTintColor: '#444',
-                        cacheTrackTintColor: '#DA9E44',
-                    }}
-                    style={styles.slider}
-                    progress={progressWorkoutTime}
-                    minimumValue={minWorkoutTime}
-                    maximumValue={maxWorkoutTime}
-                    step={11}
-                    snapToStep
-                    onValueChange={(value: number) => {
-                        setTimeInMinutes(Math.round(value));
-                        progressWorkoutTime.value = value;
-                    }}
-                    renderBubble={() => null}
-                />
-            </View>
+
+            <Text style={styles.label}>Additional Remarks
+                {"\n"}
+                (Low intensity, HIIT, Yoga, etc.):</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Enter any additional remarks"
+                placeholderTextColor= {theme.colors.textGray}
+                value={remarks}
+                onChangeText={setRemarks}
+            />
+
 
             <Text style={styles.label}>Current Fitness Level:</Text>
             <View style={styles.fitnessLevelButtonsContainer}>
@@ -272,32 +262,30 @@ export default function ExGen() {
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.label}>Additional Remarks
-                {"\n"}
-                (Low intensity, HIIT, Yoga, etc.):</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Enter any additional remarks"
-                placeholderTextColor= {theme.colors.textGray}
-                value={remarks}
-                onChangeText={setRemarks}
-            />
 
-            <View style={styles.topButtonsContainer}>
-                <TouchableOpacity
-                    style={[styles.actionButton, warmUp && styles.actionButtonActive]}
-                    onPress={() => setWarmUp(!warmUp)}
-                >
-                    <Text style={styles.actionButtonText}>Warm up: {warmUp ? 'ON' : 'OFF'}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.actionButton, coolDown && styles.actionButtonActive]}
-                    onPress={() => setCoolDown(!coolDown)}
-                >
-                    <Text style={styles.actionButtonText}>Cool down: {coolDown ? 'ON' : 'OFF'}</Text>
-                </TouchableOpacity>
+            <Text style={styles.label}>Time Available for Workout:</Text>
+            <View style={styles.sliderSection}>
+                <Text style={styles.sliderValueText}>{timeInMinutes} min</Text>
+                <Slider
+                    theme={{
+                        minimumTrackTintColor: '#DA9E44',
+                        maximumTrackTintColor: '#444',
+                        cacheTrackTintColor: '#DA9E44',
+                    }}
+                    style={styles.slider}
+                    progress={progressWorkoutTime}
+                    minimumValue={minWorkoutTime}
+                    maximumValue={maxWorkoutTime}
+                    step={11}
+                    snapToStep
+                    onValueChange={(value: number) => {
+                        setTimeInMinutes(Math.round(value));
+                        progressWorkoutTime.value = value;
+                    }}
+                    renderBubble={() => null}
+                />
             </View>
+
 
             <View style={styles.restTimerSection}>
                 <TouchableOpacity
@@ -332,6 +320,25 @@ export default function ExGen() {
                 )}
             </View>
 
+
+
+            <View style={styles.topButtonsContainer}>
+                <TouchableOpacity
+                    style={[styles.actionButton, warmUp && styles.actionButtonActive]}
+                    onPress={() => setWarmUp(!warmUp)}
+                >
+                    <Text style={styles.actionButtonText}>Warm up: {warmUp ? 'ON' : 'OFF'}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.actionButton, coolDown && styles.actionButtonActive]}
+                    onPress={() => setCoolDown(!coolDown)}
+                >
+                    <Text style={styles.actionButtonText}>Cool down: {coolDown ? 'ON' : 'OFF'}</Text>
+                </TouchableOpacity>
+            </View>
+
+
             <TouchableOpacity
                 style={styles.button}
                 onPress={handleGenerateWorkout}
@@ -351,7 +358,7 @@ export default function ExGen() {
                         style={[styles.button, { marginTop: 15, backgroundColor: '#DA9E44' }]}
                         onPress={handleSaveGeneratedWorkout}
                     >
-                        <Text style={[styles.buttonText, { color: '#000' }]}>Use This Workout</Text>
+                        <Text style={[styles.buttonText, { color: '#fff' }]}>Use This Workout</Text>
                     </TouchableOpacity>
                 </View>
             ) : null}
