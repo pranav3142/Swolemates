@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'; 
-import { Dimensions, StyleSheet, Text, View, ImageBackground, Pressable, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { Dimensions, StyleSheet, Text, View, ImageBackground, Pressable, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { supabase } from '../../utils/supabase';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -25,6 +26,14 @@ export default function Index() {
   const [comments, setComments] = useState({});
   const [showComments, setShowComments] = useState({});
   const currentUser = auth().currentUser;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchWorkouts();
+  setRefreshing(false);
+};
+
 
   const insertUserProfile = async () => {
     const user = auth().currentUser;
@@ -158,7 +167,18 @@ export default function Index() {
       />
       <Text style={styles.title2}>Workouts</Text>
 
-      <ScrollView style={{ width: '100%', paddingHorizontal: 20 }} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+          style={{ width: '100%', paddingHorizontal: 20 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#ffd33d"
+              colors={['#ffd33d']}
+            />
+        }>
+
         {workouts.map((workout, index) => (
           <View key={workout.id || index} style={{ backgroundColor: '#303030', padding: 12, borderRadius: 8, marginBottom: 12 }}>
             <Text style={{ color: '#ffd33d', fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}>

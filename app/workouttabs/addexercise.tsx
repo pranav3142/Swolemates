@@ -9,10 +9,12 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Switch,
+  
 } from 'react-native';
 import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { supabase } from '../../utils/supabase';
+
 
 interface Exercise {
   name: string;
