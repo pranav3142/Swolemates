@@ -68,42 +68,99 @@ export default function ExGen() {
         try {
             const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash'});
             const userPrompt = `
-                Generate a workout plan based on the following user preferences:
-                - Goals: ${goals}
-                - Available Equipment: ${equipment}
-                - Time Available: ${timeInMinutes} minutes
-                - Current Fitness Level: ${currentFitnessLevel}
-                - Additional Remarks ${remarks}
-                - Warm up: ${warmUp ? 'Yes' : 'No'}
-                - Cool down: ${coolDown ? 'Yes' : 'No'}
-                - Desired Rest Time Between Sets: ${restTime} seconds (if applicable)
+            Generate a workout plan based on the following user preferences:
+            - Goals: ${goals}
+            - Available Equipment: ${equipment}
+            - Time Available: ${timeInMinutes} minutes
+            - Current Fitness Level: ${currentFitnessLevel}
+            - Additional Remarks ${remarks}
+            - Warm up: ${warmUp ? 'Yes' : 'No'}
+            - Cool down: ${coolDown ? 'Yes' : 'No'}
+            - Desired Rest Time Between Sets: ${restTime} seconds (if applicable)
 
-                Output as plain text, all same font size and unbolded, being as concise as possible without unnecessary information, provide purely sets, reps and weights, and rest time between sets, give definite values, do not give a range for any values (including number of sets, reps or rest time),
-                Ensure the workout is balanced, targeting all parts of the muscle group if the user had stated, and suitable for the user's fitness level. Calculate the number of sets based on the time available, the factor to consider are 90 seconds taken to do each set of exercise, and the rest time between each set, ensuring the total time is less than the time available for the workout.
-                For number of sets, 90 seconds per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 10 sets of 3 minutes each. ensure more rest time according to the user's fitness level, with minimally 90 seconds of rest, unless it is a HIIT workout or user inputs the rest time, if there are per arm workouts, ensure fewer sets or shorter rest accordingly. A maximum of 20 sets per hour, unless it is a HIIT workout.
-                Then, structure the workout plan as follows:
-                Workout:
-                Exercise Name: [Name]
-                Sets: [e.g., 3]
-                Reps: [e.g., 12]
-                Rest: [e.g., 90 seconds]
-                Weight: [e.g., 20kg, 60kg]
+            Output Instructions
+            Output strictly as plain text with no bolding, and all text at the same font size. Be as concise as possible, providing only essential workout details.
 
-                Example Format:
-                Workout:
-                Exercise Name: Single Leg Press
-                Sets: 3
-                Reps: 10
-                Weight: 40kg
-                Rest: 90 seconds
+            Workout Structure and Calculation Rules:
+            Workout Duration: The total workout time (including warm-up, cool-down, exercises, and rest) must be less than or equal to ${timeInMinutes}.
+            Exercise Time per Set: Assume 90 seconds is required for performing one set of any exercise.
+            3.  Rest Time Between Sets:
+                * If Desired Rest Time Between Sets is provided ${restTime}, use that exact value for all exercises(except compound exercises). And use that value to calculate the total number of sets.
+                * If Desired Rest Time Between Sets is NOT provided, use a minimum of 90 seconds rest. Adjust rest time longer based on ${currentFitnessLevel} (e.g., beginner needs more rest).
+                * For HIIT workouts, rest time can be shorter than 90 seconds.
+                * For single-arm/single-leg exercises, the total duration for one side + rest for that side should fit within the overall time constraint.
+                * For compound exercises (e.g., squats, deadlifts, bench press), ensure the rest time is sufficient to recover for the next set, atleast 120 seconds after each compound exercise set, regardless of user experience level.
+            4.  Total Sets Calculation:
+                * Calculate the time required per "set cycle" as: 90 seconds (exercise) + Rest Time (from rule 3).
+                * The total number of sets (across all exercises) should be calculated to fit within ${timeInMinutes} based on this "set cycle" duration.
+                * Do not exceed *20 total sets per hour (i.e., 10 sets for 30 minutes, 5 sets for 15 minutes), unless it is a HIIT workout where more sets are permissible.
+                * Distribute these calculated sets across appropriate exercises to ensure a balanced workout targeting relevant muscle groups based on ${goals}.
+                * Reduce the number of sets if necessary to accomodate for the time available, ensuring the total time does not exceed ${timeInMinutes} minutes.
+            5.  Output Values: Provide definite, single values for Sets, Reps, Weight, and Rest. Do not provide ranges.
 
-                Exercise Name: Barbell Full Squat
-                Sets: 4
-                Reps: 6
-                Weight: 80kg
-                Rest: 120 seconds
+            Workout Plan Format:
+
+            Workout:
+            Exercise Name: [Name of Exercise]
+            Sets: [e.g., 3]
+            Reps: [e.g., 12]
+            Weight: [e.g., 20kg, 60kg, Bodyweight]
+            Rest: [e.g., 90 seconds]
+
+            [Repeat for each exercise]
+
+            Example Output Format (Strictly follow this structure
+            Workout:
+            Exercise Name: Single Leg Press
+            Sets: 3
+            Reps: 10
+            Weight: 40kg
+            Rest: 90 seconds
+
+            Exercise Name: Barbell Full Squat
+            Sets: 4
+            Reps: 6
+            Weight: 80kg
+            Rest: 120 seconds
+            
 
                 `;
+
+                // Generate a workout plan based on the following user preferences:
+                // - Goals: ${goals}
+                // - Available Equipment: ${equipment}
+                // - Time Available: ${timeInMinutes} minutes
+                // - Current Fitness Level: ${currentFitnessLevel}
+                // - Additional Remarks ${remarks}
+                // - Warm up: ${warmUp ? 'Yes' : 'No'}
+                // - Cool down: ${coolDown ? 'Yes' : 'No'}
+                // - Desired Rest Time Between Sets: ${restTime} seconds (if applicable)
+
+                // Output as plain text, all same font size and unbolded, being as concise as possible without unnecessary information, provide purely sets, reps and weights, and rest time between sets, give definite values, do not give a range for any values (including number of sets, reps or rest time),
+                // Ensure the workout is balanced, targeting all parts of the muscle group if the user had stated, and suitable for the user's fitness level. Calculate the number of sets based on the time available, the factor to consider are 90 seconds taken to do each set of exercise, and the rest time between each set, ensuring the total time is less than the time available for the workout.
+                // For number of sets, 90 seconds per set, excluding rest time, is a good rule of thumb, so if the user has 30 minutes, you can do 10 sets of 3 minutes each. ensure more rest time according to the user's fitness level, with minimally 90 seconds of rest, unless it is a HIIT workout or user inputs the rest time, if there are per arm workouts, ensure fewer sets or shorter rest accordingly. A maximum of 20 sets per hour, unless it is a HIIT workout.
+                // Then, structure the workout plan as follows:
+                // Workout:
+                // Exercise Name: [Name]
+                // Sets: [e.g., 3]
+                // Reps: [e.g., 12]
+                // Rest: [e.g., 90 seconds]
+                // Weight: [e.g., 20kg, 60kg]
+
+                // Example Format:
+                // Workout:
+                // Exercise Name: Single Leg Press
+                // Sets: 3
+                // Reps: 10
+                // Weight: 40kg
+                // Rest: 90 seconds
+
+                // Exercise Name: Barbell Full Squat
+                // Sets: 4
+                // Reps: 6
+                // Weight: 80kg
+                // Rest: 120 seconds
+                
             console.log("Sending prompt to Gemini API", userPrompt);
 
             const result = await model.generateContent(userPrompt);
