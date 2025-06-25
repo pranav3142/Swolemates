@@ -159,7 +159,7 @@ export default function TimerScreen() {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Weight"
+                  placeholder="Weight/kg"
                   value={set.weight}
                   onChangeText={(text) => {
                     const updatedList = [...exerciseList];
@@ -200,9 +200,9 @@ export default function TimerScreen() {
       },
     });
   }}
-  style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d' }]}
+  style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d',marginBottom: 30 }]}
 >
-  <Text style={{ color: '#000', fontWeight: 'bold' }}>Finish Workout</Text>
+  <Text style={{ color: '#000', fontWeight: 'bold',  }}>Finish Workout</Text>
 </TouchableOpacity>
 
     </View>
