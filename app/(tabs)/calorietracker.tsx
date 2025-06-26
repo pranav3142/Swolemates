@@ -23,7 +23,15 @@ export default function CalorieTracker() {
   const router = useRouter();
   const isFocused = useIsFocused();
 
-  const today = new Date().toISOString().split('T')[0];
+  const getSingaporeDate = () => {
+  const now = new Date();
+  const sgOffsetMs = 8 * 60 * 60 * 1000;
+  const sgDate = new Date(now.getTime() + sgOffsetMs);
+  return sgDate.toISOString().split('T')[0];
+};
+
+const today = getSingaporeDate();
+
   const todaysCalories = foodLog
     .filter(entry => entry.date === today)
     .reduce((sum, item) => sum + item.calories, 0);
@@ -71,9 +79,24 @@ export default function CalorieTracker() {
     setRefreshing(false);
   };
 
-  const resetToday = () => {
-    setFoodLog(log => log.filter(entry => entry.date !== today));
-  };
+  const resetToday = async () => {
+  const currentUser = auth().currentUser;
+  if (!currentUser) return;
+
+  const { error } = await supabase
+    .from('food_log')
+    .delete()
+    .eq('user_id', currentUser.uid)
+    .eq('date', today);
+
+  if (error) {
+    Alert.alert('Error', 'Could not delete today\'s food entries.');
+  } else {
+    setFoodLog(prev => prev.filter(entry => entry.date !== today));
+    Alert.alert('Success', 'Today\'s entries have been reset.');
+  }
+};
+
 
   const updateTarget = async () => {
     const val = parseInt(targetInput);
