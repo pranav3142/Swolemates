@@ -26,13 +26,13 @@ const welcome = () => {
         {/* footer  */}
         <View style={styles.footer}>
           <Button
-            title="Getting Started"
+            title="Get Started"
             buttonStyle={{marginHorizontal: wp(3)}}
             onPress={()=> router.push('signUp')}
           />
           <View style={styles.bottomTextContainer}>
             <Text style={styles.loginText}>
-              Already have an account!
+              Already have an account?
             </Text>
             <Pressable onPress={()=> router.push('login')}>
               <Text style={[styles.loginText, {color: theme.colors.primaryDark, fontWeight: theme.fonts.semibold}]}>
