@@ -25,7 +25,7 @@ jest.mock('../../utils/supabase', () => ({
 
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import FollowersList from './followers';
+import FollowersList from '../app/followingtabs/followers';
 
 describe('FollowersList', () => {
   it('renders without crashing and shows no followers by default', () => {
