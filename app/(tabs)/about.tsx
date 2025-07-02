@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
 import {
   Image,
@@ -12,13 +12,18 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  Alert,
+  TextInput,
 } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { supabase } from '../../utils/supabase';
+
+const FITNESS_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 
 export default function ProfileScreen() {
   const [activeSections, setActiveSections] = useState({});
-
   const [settings, setSettings] = useState({
     pushAlerts: true,
     darkMode: false,
@@ -27,6 +32,56 @@ export default function ProfileScreen() {
     dataSharing: true,
   });
 
+  // --- Profile Info State ---
+  const user = auth().currentUser;
+  const [age, setAge] = useState('');
+  const [location, setLocation] = useState('');
+  const [fitnessLevel, setFitnessLevel] = useState(1); // 0=Beginner, 1=Intermediate, 2=Advanced
+  const [goal, setGoal] = useState('');
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+    setLoadingProfile(true);
+    const { data, error } = await supabase
+      .from('about')
+      .select('age, location, fitness_level, goal')
+      .eq('user_id', user.uid)
+      .single();
+    if (data) {
+      setAge(data.age ? String(data.age) : '');
+      setLocation(data.location || '');
+      setGoal(data.goal || '');
+      // Map string to button index
+      if (data.fitness_level === 'Beginner') setFitnessLevel(0);
+      else if (data.fitness_level === 'Advanced') setFitnessLevel(2);
+      else setFitnessLevel(1);
+    }
+    setLoadingProfile(false);
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    const { error } = await supabase.from('about').upsert({
+      user_id: user.uid,
+      age: age ? parseInt(age) : null,
+      location,
+      fitness_level: FITNESS_LEVELS[fitnessLevel],
+      goal,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    setSavingProfile(false);
+    if (error) Alert.alert('Error', error.message);
+    else Alert.alert('Success', 'Profile updated!');
+  };
+
+  // --- Existing Accordions ---
   const toggleSection = (index) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setActiveSections((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -133,14 +188,15 @@ export default function ProfileScreen() {
               <Ionicons name="pencil" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
-          {auth().currentUser && (
+          {user && (
             <>
-              <Text style={styles.name}>{auth().currentUser.displayName || 'Unnamed User'}</Text>
-              <Text style={styles.username}>@{auth().currentUser.email?.split('@')[0]}</Text>
+              <Text style={styles.name}>{user.displayName || 'Unnamed User'}</Text>
+              <Text style={styles.username}>@{user.email?.split('@')[0]}</Text>
             </>
           )}
         </View>
 
+        {/* --- Followers/Following --- */}
         <View style={styles.followWrapper}>
           <View style={styles.followContainer}>
             <Pressable onPress={() => router.push('../followingtabs/followers')} style={styles.followButton}>
@@ -152,6 +208,84 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* ---- PROFILE INFO CARD ---- */}
+        <View style={styles.profileInfoCard}>
+          <Text style={styles.profileInfoTitle}>Profile Info for Buddy finding</Text>
+          {loadingProfile ? (
+            <ActivityIndicator color="#ffd33d" size="large" style={{ marginVertical: 12 }} />
+          ) : (
+            <>
+              {/* Age */}
+              <Text style={styles.label}>Age</Text>
+              <TextInput
+                value={age}
+                onChangeText={setAge}
+                style={styles.inputField}
+                placeholder="Enter your age"
+                placeholderTextColor="#aaa"
+                keyboardType="numeric"
+                maxLength={2}
+              />
+
+              {/* Location */}
+              <Text style={styles.label}>Location</Text>
+              <TextInput
+                value={location}
+                onChangeText={setLocation}
+                style={styles.inputField}
+                placeholder="Enter your location"
+                placeholderTextColor="#aaa"
+                autoCapitalize="words"
+              />
+
+              {/* Fitness Level (Buttons) */}
+              <Text style={styles.label}>Fitness Level</Text>
+              <View style={styles.fitnessLevelButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.actionButton, fitnessLevel === 0 && styles.actionButtonActive]}
+                  onPress={() => setFitnessLevel(0)}
+                >
+                  <Text style={[styles.actionButtonText, fitnessLevel === 0 && styles.actionButtonTextActive]}>Beginner</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, fitnessLevel === 1 && styles.actionButtonActive]}
+                  onPress={() => setFitnessLevel(1)}
+                >
+                  <Text style={[styles.actionButtonText, fitnessLevel === 1 && styles.actionButtonTextActive]}>Intermediate</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, fitnessLevel === 2 && styles.actionButtonActive]}
+                  onPress={() => setFitnessLevel(2)}
+                >
+                  <Text style={[styles.actionButtonText, fitnessLevel === 2 && styles.actionButtonTextActive]}>Advanced</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Goal */}
+              <Text style={styles.label}>Workout Goal</Text>
+              <TextInput
+                value={goal}
+                onChangeText={setGoal}
+                style={styles.inputField}
+                placeholder="e.g. Lose Weight, Gain Muscle, Cardio"
+                placeholderTextColor="#aaa"
+                autoCapitalize="words"
+              />
+
+              <TouchableOpacity
+                style={[styles.actionButton, { marginTop: 8, marginBottom: 0 }, savingProfile && { opacity: 0.7 }]}
+                onPress={handleSaveProfile}
+                disabled={savingProfile}
+              >
+                <Text style={{ color: '#fff', fontWeight: '600' }}>
+                  {savingProfile ? 'Saving...' : 'Save'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
+        {/* --- Settings Accordions --- */}
         {items.map((item, index) => (
           <View key={index}>
             <TouchableOpacity style={styles.item} onPress={() => toggleSection(index)}>
@@ -168,6 +302,7 @@ export default function ProfileScreen() {
           </View>
         ))}
 
+        {/* --- Logout --- */}
         <TouchableOpacity style={styles.logoutButton}>
           <Pressable onPress={() => router.push('../(auth)/welcome')}>
             <Text style={styles.logoutText}>Logout</Text>
@@ -208,11 +343,12 @@ const styles = StyleSheet.create({
   followWrapper: {
     alignItems: 'center',
     marginTop: 0,
+    marginBottom: 2,
   },
   followContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
+    gap: 15,
   },
   followButton: {
     backgroundColor: '#ffd33d',
@@ -222,6 +358,66 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   followText: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  profileInfoCard: {
+    backgroundColor: '#1c1c1e',
+    borderRadius: 12,
+    marginHorizontal: 18,
+    marginBottom: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.13,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  profileInfoTitle: {
+    color: '#ffd33d',
+    fontSize: 17,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  inputField: {
+    backgroundColor: '#2c2c2e',
+    color: '#fff',
+    borderRadius: 8,
+    fontSize: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 14,
+  },
+  label: {
+    color: '#ffd33d',
+    fontWeight: 'bold',
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  fitnessLevelButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 14,
+    gap: 15,
+  },
+  actionButton: {
+    backgroundColor: '#444',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 100,
+  },
+  actionButtonActive: {
+    backgroundColor: '#ffd33d',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  actionButtonTextActive: {
     color: '#000',
     fontWeight: 'bold',
   },
@@ -252,20 +448,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#d00',
     fontWeight: '500',
-  },
-  actionButton: {
-    backgroundColor: '#DA9E44',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginHorizontal: 24,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    textAlign: 'center',
   },
   switchRow: {
     flexDirection: 'row',
