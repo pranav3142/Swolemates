@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../utils/supabase';
 
 const FITNESS_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
@@ -32,18 +33,21 @@ export default function ProfileScreen() {
     dataSharing: true,
   });
 
-  // --- Profile Info State ---
   const user = auth().currentUser;
   const [age, setAge] = useState('');
   const [location, setLocation] = useState('');
   const [fitnessLevel, setFitnessLevel] = useState(1); // 0=Beginner, 1=Intermediate, 2=Advanced
   const [goal, setGoal] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Fetch profile data + profile picture
   const fetchProfile = async () => {
     if (!user) return;
     setLoadingProfile(true);
+    // Get main profile fields
     const { data, error } = await supabase
       .from('about')
       .select('age, location, fitness_level, goal')
@@ -53,11 +57,20 @@ export default function ProfileScreen() {
       setAge(data.age ? String(data.age) : '');
       setLocation(data.location || '');
       setGoal(data.goal || '');
-      // Map string to button index
       if (data.fitness_level === 'Beginner') setFitnessLevel(0);
       else if (data.fitness_level === 'Advanced') setFitnessLevel(2);
       else setFitnessLevel(1);
     }
+    // Get latest/active profile picture
+    const { data: pictureData } = await supabase
+      .from('profile_pictures')
+      .select('image_url')
+      .eq('user_id', user.uid)
+      .eq('is_active', true)
+      .order('uploaded_at', { ascending: false })
+      .limit(1)
+      .single();
+    setAvatarUrl(pictureData?.image_url || '');
     setLoadingProfile(false);
   };
 
@@ -81,7 +94,91 @@ export default function ProfileScreen() {
     else Alert.alert('Success', 'Profile updated!');
   };
 
-  // --- Existing Accordions ---
+  // Upload photo handler
+  const pickImage = async () => {
+  setUploading(true);
+  try {
+    // 1. Get permission
+    let permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Camera roll access is required!');
+      setUploading(false);
+      return;
+    }
+
+    // 2. Pick image
+    let pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    // 3. Check for valid result (cancel, etc.)
+    if (
+      !pickerResult ||
+      pickerResult.canceled ||
+      !pickerResult.assets ||
+      !pickerResult.assets.length ||
+      !pickerResult.assets[0].uri
+    ) {
+      setUploading(false);
+      return;
+    }
+
+    const uri = pickerResult.assets[0].uri;
+
+    // 4. Fetch and validate Blob
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    if (!blob || blob.size === 0) {
+      Alert.alert('Upload failed', 'Selected image file is empty.');
+      setUploading(false);
+      return;
+    }
+
+    // 5. Upload to Supabase Storage
+    const fileName = `${user.uid}/profile.jpg`;
+    const { error: uploadError } = await supabase
+      .storage
+      .from('avatars')
+      .upload(fileName, blob, {
+        upsert: true,
+        contentType: 'image/jpeg',
+      });
+
+    if (uploadError) {
+      Alert.alert('Upload failed', uploadError.message);
+      setUploading(false);
+      return;
+    }
+
+    // 6. Get and set the public URL
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+    const publicUrl = publicUrlData.publicUrl;
+    setAvatarUrl(publicUrl);
+
+    // 7. Deactivate old pictures & add new row to profile_pictures table
+    await supabase.from('profile_pictures').update({ is_active: false }).eq('user_id', user.uid);
+    await supabase.from('profile_pictures').insert({
+      user_id: user.uid,
+      image_url: publicUrl,
+      is_active: true,
+    });
+
+    Alert.alert('Profile Picture Updated!');
+  } catch (e) {
+    Alert.alert('Upload failed', e.message || String(e));
+  }
+  setUploading(false);
+};
+
+
+
+  // Accordions, toggles, etc (unchanged)
   const toggleSection = (index) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setActiveSections((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -181,12 +278,23 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require('../../assets/images/userIconYellow.png')}
+              source={
+                avatarUrl
+                  ? { uri: avatarUrl }
+                  : require('../../assets/images/userIconYellow.png')
+              }
               style={styles.avatar}
             />
-            <TouchableOpacity style={styles.editIcon}>
+            <TouchableOpacity style={styles.editIcon} onPress={pickImage} disabled={uploading}>
               <Ionicons name="pencil" size={16} color="#fff" />
             </TouchableOpacity>
+            {uploading && (
+              <ActivityIndicator
+                size="small"
+                color="#ffd33d"
+                style={{ position: 'absolute', top: 30, left: 30 }}
+              />
+            )}
           </View>
           {user && (
             <>
