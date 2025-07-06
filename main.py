@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
 from logic import get_top_buddies
 from pydantic import BaseModel
