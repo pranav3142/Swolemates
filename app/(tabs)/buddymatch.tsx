@@ -58,7 +58,7 @@ export default function BuddyMatch() {
       const likedUserIds = likedData?.map(entry => entry.liked_user_id) || [];
 
       // Call backend to get recommended matches
-      const resp = await fetch('http://127.0.0.1:8000/recommend-buddies', {
+      const resp = await fetch('https://allied-arlene-pranav3142-8e293de8.koyeb.app/recommend-buddies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId }),
