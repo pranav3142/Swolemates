@@ -95,26 +95,24 @@ export default function ProfileScreen() {
   };
 
   // Upload photo handler
-  const pickImage = async () => {
+ const pickImage = async () => {
   setUploading(true);
   try {
-    // 1. Get permission
-    let permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Permission needed', 'Camera roll access is required!');
       setUploading(false);
       return;
     }
 
-    // 2. Pick image
-    let pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
+   const pickerResult = await ImagePicker.launchImageLibraryAsync({
+  mediaTypes: ImagePicker.MediaTypeOptions.Images, // ✅ enum, not string array
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.7,
+});
 
-    // 3. Check for valid result (cancel, etc.)
+
     if (
       !pickerResult ||
       pickerResult.canceled ||
@@ -127,8 +125,6 @@ export default function ProfileScreen() {
     }
 
     const uri = pickerResult.assets[0].uri;
-
-    // 4. Fetch and validate Blob
     const response = await fetch(uri);
     const blob = await response.blob();
     if (!blob || blob.size === 0) {
@@ -137,15 +133,11 @@ export default function ProfileScreen() {
       return;
     }
 
-    // 5. Upload to Supabase Storage
     const fileName = `${user.uid}/profile.jpg`;
-    const { error: uploadError } = await supabase
-      .storage
-      .from('avatars')
-      .upload(fileName, blob, {
-        upsert: true,
-        contentType: 'image/jpeg',
-      });
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, blob, {
+      upsert: true,
+      contentType: 'image/jpeg',
+    });
 
     if (uploadError) {
       Alert.alert('Upload failed', uploadError.message);
@@ -153,15 +145,10 @@ export default function ProfileScreen() {
       return;
     }
 
-    // 6. Get and set the public URL
-    const { data: publicUrlData } = supabase
-      .storage
-      .from('avatars')
-      .getPublicUrl(fileName);
+    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
     const publicUrl = publicUrlData.publicUrl;
     setAvatarUrl(publicUrl);
 
-    // 7. Deactivate old pictures & add new row to profile_pictures table
     await supabase.from('profile_pictures').update({ is_active: false }).eq('user_id', user.uid);
     await supabase.from('profile_pictures').insert({
       user_id: user.uid,
@@ -175,6 +162,7 @@ export default function ProfileScreen() {
   }
   setUploading(false);
 };
+
 
 
 

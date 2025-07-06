@@ -1,16 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { supabase } from '../../utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
+import { useRouter, useNavigation } from 'expo-router';
 
 export default function BuddyMatch() {
   const [buddyProfiles, setBuddyProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [current, setCurrent] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
+  const navigation = useNavigation();
 
-  // Get Firebase Auth user ID on mount
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Match with a gym buddy',
+      headerStyle: {
+        backgroundColor: '#25292e',
+      },
+      headerTintColor: '#fff',
+    });
+  }, [navigation]);
+
   useEffect(() => {
     const currentUser = auth().currentUser;
     if (currentUser) {
@@ -21,6 +33,12 @@ export default function BuddyMatch() {
     }
   }, []);
 
+  useEffect(() => {
+    if (userId) {
+      fetchMatches(); // Auto-fetch matches once userId is available
+    }
+  }, [userId]);
+
   const fetchMatches = async () => {
     if (!userId) {
       Alert.alert('Error', 'User ID is not available.');
@@ -29,9 +47,17 @@ export default function BuddyMatch() {
 
     setLoading(true);
     try {
-      console.log('Sending user_id:', userId);
-      console.log('Request body:', JSON.stringify({ user_id: userId }));
+      // Get previously liked user IDs
+      const { data: likedData, error: likedError } = await supabase
+        .from('buddylikes')
+        .select('liked_user_id')
+        .eq('user_id', userId);
 
+      if (likedError) throw likedError;
+
+      const likedUserIds = likedData?.map(entry => entry.liked_user_id) || [];
+
+      // Call backend to get recommended matches
       const resp = await fetch('http://127.0.0.1:8000/recommend-buddies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,17 +66,42 @@ export default function BuddyMatch() {
 
       const data = await resp.json();
       console.log('Full backend response:', data);
-      console.log('Matched user IDs:', data.user_ids);
 
       if (!data.user_ids) throw new Error('No matches found');
-      
-      const { data: profiles, error } = await supabase
-        .from('about')
-        .select('user_id, age, location, fitness_level, goal, avatar_url, name')
-        .in('user_id', data.user_ids);
 
-      if (error) throw error;
-      setBuddyProfiles(profiles || []);
+      // Filter out liked user_ids
+      const filteredIds = data.user_ids.filter((id: string) => !likedUserIds.includes(id));
+
+      // Fetch data from Supabase
+      const { data: aboutData, error: aboutError } = await supabase
+        .from('about')
+        .select('user_id, age, location, fitness_level, goal')
+        .in('user_id', filteredIds);
+      if (aboutError) throw aboutError;
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', filteredIds);
+      if (profileError) throw profileError;
+
+      const { data: pictureData, error: pictureError } = await supabase
+        .from('profile_pictures')
+        .select('user_id, image_url')
+        .in('user_id', filteredIds);
+      if (pictureError) throw pictureError;
+
+      const merged = aboutData.map(user => {
+        const profile = profileData.find(p => p.id === user.user_id);
+        const picture = pictureData.find(p => p.user_id === user.user_id);
+        return {
+          ...user,
+          name: profile?.username || 'No name',
+          avatar_url: picture?.image_url || null,
+        };
+      });
+
+      setBuddyProfiles(merged);
       setCurrent(0);
     } catch (e) {
       Alert.alert('Error', e.message || String(e));
@@ -81,11 +132,6 @@ export default function BuddyMatch() {
   return (
     <View style={styles.container}>
       {!userId && <Text style={{ color: '#fff' }}>Loading user info...</Text>}
-      {userId && buddyProfiles.length === 0 && !loading && (
-        <TouchableOpacity style={styles.findButton} onPress={fetchMatches}>
-          <Text style={styles.findButtonText}>Find a Buddy</Text>
-        </TouchableOpacity>
-      )}
       {loading && <ActivityIndicator size="large" color="#ffd33d" />}
       {profile && (
         <View style={styles.card}>
@@ -97,7 +143,7 @@ export default function BuddyMatch() {
             }
             style={styles.avatar}
           />
-          <Text style={styles.name}>{profile.name || 'No name'}</Text>
+          <Text style={styles.name}>{profile.name}</Text>
           <Text style={styles.info}>{profile.age} | {profile.location}</Text>
           <Text style={styles.info}>{profile.fitness_level} | {profile.goal}</Text>
           <View style={styles.buttonRow}>
@@ -113,12 +159,18 @@ export default function BuddyMatch() {
       {userId && buddyProfiles.length > 0 && current >= buddyProfiles.length && (
         <Text style={{ color: "#fff", fontSize: 18, marginTop: 60 }}>No more buddies to show. 🎉</Text>
       )}
+
+      {userId && (
+        <TouchableOpacity style={styles.viewMatchesButton} onPress={() => router.push('../buddyfindtabs/matched_buddies')}>
+          <Text style={styles.viewMatchesText}>View Matched Buddies</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#25292e', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#25292e', alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
   card: {
     backgroundColor: '#1c1c1e',
     borderRadius: 16,
@@ -138,6 +190,17 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 30, gap: 50 },
   crossButton: { backgroundColor: '#d11a2a', padding: 18, borderRadius: 40, marginRight: 16 },
   tickButton: { backgroundColor: '#49C368', padding: 18, borderRadius: 40, marginLeft: 16 },
-  findButton: { marginTop: 100, backgroundColor: '#ffd33d', padding: 18, borderRadius: 20 },
-  findButtonText: { color: '#25292e', fontWeight: 'bold', fontSize: 18 },
+  viewMatchesButton: {
+    position: 'absolute',
+    bottom: 20,
+    backgroundColor: '#ffd33d',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+  },
+  viewMatchesText: {
+    color: '#25292e',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

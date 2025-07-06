@@ -14,12 +14,14 @@ export default function AddFood() {
   
 
   useLayoutEffect(() => {
-      navigation.setOptions({
-        title: 'My Custom Exercises',
-        headerStyle: { backgroundColor: '#25292e' },
-        headerTintColor: '#fff',
-      });
-    }, [navigation]);
+    navigation.setOptions({
+      title: 'Add Food',
+      headerStyle: {
+        backgroundColor: '#25292e',
+      },
+      headerTintColor: '#fff',
+    });
+  }, [navigation]);
 
   const handleAdd = async () => {
   const calNum = parseInt(calories);
