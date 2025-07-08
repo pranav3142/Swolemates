@@ -106,7 +106,7 @@ export default function ProfileScreen() {
     }
 
    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-  mediaTypes: ImagePicker.MediaTypeOptions.Images, // ✅ enum, not string array
+  mediaTypes: ImagePicker.MediaTypeOptions.Images, 
   allowsEditing: true,
   aspect: [1, 1],
   quality: 0.7,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, Dimensions, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, Dimensions, Image, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { supabase } from '../../utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
@@ -12,6 +12,13 @@ export default function BuddyMatch() {
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   const navigation = useNavigation();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchMatches();
+  setRefreshing(false);
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -130,43 +137,47 @@ export default function BuddyMatch() {
   const profile = buddyProfiles[current];
 
   return (
-    <View style={styles.container}>
-      {!userId && <Text style={{ color: '#fff' }}>Loading user info...</Text>}
-      {loading && <ActivityIndicator size="large" color="#ffd33d" />}
-      {profile && (
-        <View style={styles.card}>
-          <Image
-            source={
-              profile.avatar_url
-                ? { uri: profile.avatar_url }
-                : require('../../assets/images/userIconYellow.png')
-            }
-            style={styles.avatar}
-          />
-          <Text style={styles.name}>{profile.name}</Text>
-          <Text style={styles.info}>{profile.age} | {profile.location}</Text>
-          <Text style={styles.info}>{profile.fitness_level} | {profile.goal}</Text>
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.crossButton} onPress={nextProfile}>
-              <Ionicons name="close" size={40} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.tickButton} onPress={handleLike}>
-              <Ionicons name="checkmark" size={40} color="#fff" />
-            </TouchableOpacity>
-          </View>
+  <ScrollView
+    contentContainerStyle={styles.container}
+    refreshControl={
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ffd33d" />
+    }
+  >
+    {!userId && <Text style={{ color: '#fff' }}>Loading user info...</Text>}
+    {loading && <ActivityIndicator size="large" color="#ffd33d" />}
+    {profile && (
+      <View style={styles.card}>
+        <Image
+          source={
+            profile.avatar_url
+              ? { uri: profile.avatar_url }
+              : require('../../assets/images/userIconYellow.png')
+          }
+          style={styles.avatar}
+        />
+        <Text style={styles.name}>{profile.name}</Text>
+        <Text style={styles.info}>{profile.age} | {profile.location}</Text>
+        <Text style={styles.info}>{profile.fitness_level} | {profile.goal}</Text>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.crossButton} onPress={nextProfile}>
+            <Ionicons name="close" size={40} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tickButton} onPress={handleLike}>
+            <Ionicons name="checkmark" size={40} color="#fff" />
+          </TouchableOpacity>
         </View>
-      )}
-      {userId && buddyProfiles.length > 0 && current >= buddyProfiles.length && (
-        <Text style={{ color: "#fff", fontSize: 18, marginTop: 60 }}>No more buddies to show. 🎉</Text>
-      )}
-
-      {userId && (
-        <TouchableOpacity style={styles.viewMatchesButton} onPress={() => router.push('../buddyfindtabs/matched_buddies')}>
-          <Text style={styles.viewMatchesText}>View Matched Buddies</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+      </View>
+    )}
+    {userId && buddyProfiles.length > 0 && current >= buddyProfiles.length && (
+      <Text style={{ color: "#fff", fontSize: 18, marginTop: 60 }}>No more buddies to show. 🎉</Text>
+    )}
+    {userId && (
+      <TouchableOpacity style={styles.viewMatchesButton} onPress={() => router.push('../buddyfindtabs/matched_buddies')}>
+        <Text style={styles.viewMatchesText}>View Matched Buddies</Text>
+      </TouchableOpacity>
+    )}
+  </ScrollView>
+);
 }
 
 const styles = StyleSheet.create({

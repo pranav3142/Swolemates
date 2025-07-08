@@ -1,8 +1,18 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, Image, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { supabase } from '../../utils/supabase';
 import auth from '@react-native-firebase/auth';
-import { useNavigation, Tabs } from 'expo-router';
+import { useNavigation } from 'expo-router';
 
 interface Buddy {
   user_id: string;
@@ -17,6 +27,7 @@ interface Buddy {
 export default function MatchedBuddies() {
   const [likedBuddies, setLikedBuddies] = useState<Buddy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [followStatus, setFollowStatus] = useState<Record<string, boolean>>({});
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
@@ -80,18 +91,78 @@ export default function MatchedBuddies() {
         });
 
         setLikedBuddies(merged);
+        checkFollowingStatus(merged.map((b) => b.user_id));
       } catch (err) {
         console.error('Failed to fetch matched buddies:', err);
       }
       setLoading(false);
     };
 
+    const checkFollowingStatus = async (userIds: string[]) => {
+      const currentUser = auth().currentUser;
+      if (!currentUser) return;
+
+      const { data, error } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.uid)
+        .in('following_id', userIds);
+
+      if (error) return console.error(error);
+
+      const statusMap: Record<string, boolean> = {};
+      userIds.forEach((id) => {
+        statusMap[id] = data.some((row) => row.following_id === id);
+      });
+
+      setFollowStatus(statusMap);
+    };
+
     fetchLikedBuddies();
   }, []);
+
+  const toggleFollow = async (targetId: string) => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) return;
+
+    const isFollowing = followStatus[targetId];
+
+    if (isFollowing) {
+      // Unfollow
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', currentUser.uid)
+        .eq('following_id', targetId);
+
+      if (error) return Alert.alert('Error', error.message);
+
+      const followId = data[0]?.id;
+      if (followId) {
+        const { error: delError } = await supabase.from('follows').delete().eq('id', followId);
+        if (delError) return Alert.alert('Unfollow Error', delError.message);
+      }
+
+      setFollowStatus((prev) => ({ ...prev, [targetId]: false }));
+    } else {
+      // Follow
+      const { error } = await supabase.from('follows').insert({
+        follower_id: currentUser.uid,
+        following_id: targetId,
+      });
+
+      if (error) return Alert.alert('Follow Error', error.message);
+      setFollowStatus((prev) => ({ ...prev, [targetId]: true }));
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Matched Buddies</Text>
+      <Text style={styles.instruction}>
+        Once both users follow each other, you'll be able to chat 
+      </Text>
+
 
       {loading && <ActivityIndicator size="large" color="#ffd33d" />}
 
@@ -99,21 +170,36 @@ export default function MatchedBuddies() {
         {likedBuddies.length === 0 && !loading && (
           <Text style={styles.noMatches}>No liked buddies yet.</Text>
         )}
-        {likedBuddies.map((buddy, index) => (
-          <View key={index} style={styles.card}>
-            <Image
-              source={
-                buddy.avatar_url
-                  ? { uri: buddy.avatar_url }
-                  : require('../../assets/images/userIconYellow.png')
-              }
-              style={styles.avatar}
-            />
-            <Text style={styles.name}>{buddy.name}</Text>
-            <Text style={styles.info}>{buddy.age} | {buddy.location}</Text>
-            <Text style={styles.info}>{buddy.fitness_level} | {buddy.goal}</Text>
-          </View>
-        ))}
+        {likedBuddies.map((buddy, index) => {
+          const isFollowing = followStatus[buddy.user_id];
+          return (
+            <View key={index} style={styles.card}>
+              <Image
+                source={
+                  buddy.avatar_url
+                    ? { uri: buddy.avatar_url }
+                    : require('../../assets/images/userIconYellow.png')
+                }
+                style={styles.avatar}
+              />
+              <Text style={styles.name}>{buddy.name}</Text>
+              <Text style={styles.info}>{buddy.age} | {buddy.location}</Text>
+              <Text style={styles.info}>{buddy.fitness_level} | {buddy.goal}</Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.followBtn,
+                  isFollowing && styles.followingBtn,
+                ]}
+                onPress={() => toggleFollow(buddy.user_id)}
+              >
+                <Text style={[styles.followText, isFollowing && styles.followingText]}>
+                  {isFollowing ? 'Following' : 'Follow Back'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -169,4 +255,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  followBtn: {
+    backgroundColor: '#ffd33d',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginTop: 10,
+  },
+  followText: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  followingBtn: {
+    backgroundColor: 'green',
+  },
+  followingText: {
+    color: '#fff',
+  },
+  instruction: {
+  color: '#aaa',
+  fontSize: 14,
+  marginBottom: 10,
+  textAlign: 'center',
+},
+
 });
