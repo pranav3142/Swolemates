@@ -123,23 +123,27 @@ export default function TimerScreen() {
     }
   };
 
-  const handleFinishWorkout = () => {
-    // Filter out exercises that have no completed sets
-    const completedExercises = exerciseList.map(exercise => ({
-      ...exercise,
-      sets: exercise.sets ? exercise.sets.filter(set => set.completed) : []
-    })).filter(exercise => exercise.sets && exercise.sets.length > 0);
+const handleFinishWorkout = () => {
+  // Filter out exercises that have no completed sets
+  const completedExercises = exerciseList.map(exercise => ({
+    ...exercise,
+    sets: exercise.sets ? exercise.sets.filter(set => set.completed) : []
+  })).filter(exercise => exercise.sets && exercise.sets.length > 0);
 
-    // Filter out exercises that have no completed sets and remove the `completed` property
-    const cleanExercises = completedExercises.map(exercise => ({
-      ...exercise,
-      sets: exercise.sets?.map(({ completed, ...rest }) => rest)
-    }));
+  // Remove 'completed' property before sending
+  const cleanExercises = completedExercises.map(exercise => ({
+    ...exercise,
+    sets: exercise.sets?.map(({ completed, ...rest }) => rest)
+  }));
 
-    saveWorkout(cleanExercises);
-    router.replace('/workout'); // Navigate back after saving
-  };
-
+  // Navigate to Workout screen with the cleaned data
+  router.push({
+    pathname: '/workouttabs/saveworkout',
+    params: {
+      exercises: JSON.stringify(cleanExercises),
+    }
+  });
+};
   return (
     <View style={styles.container}>
       <View style={styles.timerCard}>
