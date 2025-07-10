@@ -4,11 +4,12 @@ import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '../../utils/supabase';
 import auth from '@react-native-firebase/auth';
-
+import BouncyCheckbox from 'react-native-bouncy-checkbox'; // Changed import
 
 interface SetEntry {
   reps: string;
   weight: string;
+  completed: boolean; // Add completed property
 }
 
 interface Exercise {
@@ -36,13 +37,6 @@ async function saveWorkout(exercises: Exercise[]) {
     data: exercises,
     timestamp: new Date(),
   });
-  
-  const testSupabase = async () => {
-  const { data, error } = await supabase.from('workouts').select('*').limit(1);
-  if (error) console.error('Supabase error:', error.message);
-  else console.log('Supabase response:', data);
-};
-
 
   if (error) {
     console.error('Error saving workout:', error.message);
@@ -51,9 +45,6 @@ async function saveWorkout(exercises: Exercise[]) {
   }
 }
 
-
-
-
 export default function TimerScreen() {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
@@ -61,7 +52,7 @@ export default function TimerScreen() {
 
   const navigation = useNavigation();
   const router = useRouter();
-  
+
   const { selectedExercise } = useLocalSearchParams();
 
   useLayoutEffect(() => {
@@ -71,9 +62,9 @@ export default function TimerScreen() {
       headerTintColor: '#fff',
       headerBackVisible: false,
       headerLeft: () => (
-      <TouchableOpacity onPress={() => router.replace('/workout')} style={{ paddingHorizontal: 16 }}>
-        <Ionicons name={'chevron-back-outline'} color={'white'} size={24}/>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.replace('/workout')} style={{ paddingHorizontal: 16 }}>
+          <Ionicons name={'chevron-back-outline'} color={'white'} size={24} />
+        </TouchableOpacity>
       )
     });
   }, [navigation]);
@@ -94,7 +85,12 @@ export default function TimerScreen() {
     if (selectedExercise) {
       try {
         const parsed: Exercise[] = JSON.parse(selectedExercise as string);
-        setExerciseList(parsed);
+        // Initialize 'completed' property for each set
+        const initializedParsed = parsed.map(ex => ({
+          ...ex,
+          sets: ex.sets?.map(set => ({ ...set, completed: set.completed ?? false }))
+        }));
+        setExerciseList(initializedParsed);
       } catch (err) {
         console.error('Failed to parse selectedExercise list:', err);
       }
@@ -117,6 +113,31 @@ export default function TimerScreen() {
         currentList: JSON.stringify(exerciseList),
       },
     });
+  };
+
+  const handleSetCompletionToggle = (exerciseIndex: number, setIndex: number, newValue: boolean) => {
+    const updatedList = [...exerciseList];
+    if (updatedList[exerciseIndex].sets && updatedList[exerciseIndex].sets![setIndex]) {
+      updatedList[exerciseIndex].sets![setIndex].completed = newValue;
+      setExerciseList(updatedList);
+    }
+  };
+
+  const handleFinishWorkout = () => {
+    // Filter out exercises that have no completed sets
+    const completedExercises = exerciseList.map(exercise => ({
+      ...exercise,
+      sets: exercise.sets ? exercise.sets.filter(set => set.completed) : []
+    })).filter(exercise => exercise.sets && exercise.sets.length > 0);
+
+    // Filter out exercises that have no completed sets and remove the `completed` property
+    const cleanExercises = completedExercises.map(exercise => ({
+      ...exercise,
+      sets: exercise.sets?.map(({ completed, ...rest }) => rest)
+    }));
+
+    saveWorkout(cleanExercises);
+    router.replace('/workout'); // Navigate back after saving
   };
 
   return (
@@ -143,32 +164,50 @@ export default function TimerScreen() {
             <Text style={styles.detailText}>Difficulty: {ex.difficulty}</Text>
 
             {(ex.sets ?? []).map((set, setIdx) => (
-              <View key={setIdx} style={{ marginTop: 6 }}>
-                <Text style={styles.detailText}>Set {setIdx + 1}</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Reps"
-                  value={set.reps}
-                  onChangeText={(text) => {
-                    const updatedList = [...exerciseList];
-                    updatedList[idx].sets![setIdx].reps = text;
-                    setExerciseList(updatedList);
-                  }}
-                  keyboardType="numeric"
-                  placeholderTextColor="#aaa"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Weight/kg"
-                  value={set.weight}
-                  onChangeText={(text) => {
-                    const updatedList = [...exerciseList];
-                    updatedList[idx].sets![setIdx].weight = text;
-                    setExerciseList(updatedList);
-                  }}
-                  keyboardType="numeric"
-                  placeholderTextColor="#aaa"
-                />
+              <View key={setIdx} style={styles.setRow}>
+                <View style={styles.setTextInputContainer}>
+                  <Text style={styles.detailText}>Set {setIdx + 1}</Text>
+                  <TextInput
+                    style={[styles.input, !set.completed && styles.inputGreyedOut]}
+                    placeholder="Reps"
+                    value={set.reps}
+                    onChangeText={(text) => {
+                      const updatedList = [...exerciseList];
+                      updatedList[idx].sets![setIdx].reps = text;
+                      setExerciseList(updatedList);
+                    }}
+                    keyboardType="numeric"
+                    placeholderTextColor="#aaa"
+                    editable={!set.completed} // Disable editing if completed
+                  />
+                  <TextInput
+                    style={[styles.input, !set.completed && styles.inputGreyedOut]}
+                    placeholder="Weight/kg"
+                    value={set.weight}
+                    onChangeText={(text) => {
+                      const updatedList = [...exerciseList];
+                      updatedList[idx].sets![setIdx].weight = text;
+                      setExerciseList(updatedList);
+                    }}
+                    keyboardType="numeric"
+                    placeholderTextColor="#aaa"
+                    editable={!set.completed} // Disable editing if completed
+                  />
+                </View>
+                <View style={styles.checkboxContainer}>
+                  <BouncyCheckbox // Changed component here
+                    size={25}
+                    fillColor={styles.exerciseText.color}
+                    unfillColor="#aaa"
+                    iconStyle={{ borderColor: styles.exerciseText.color }}
+                    innerIconStyle={{ borderWidth: 2 }}
+                    onPress={(isChecked: boolean) => {
+                      handleSetCompletionToggle(idx, setIdx, isChecked);
+                    }}
+                    isChecked={set.completed}
+                    disableBuiltInState // Crucial for external state management
+                  />
+                </View>
               </View>
             ))}
 
@@ -177,7 +216,7 @@ export default function TimerScreen() {
               onPress={() => {
                 const updatedList = [...exerciseList];
                 if (!updatedList[idx].sets) updatedList[idx].sets = [];
-                updatedList[idx].sets!.push({ reps: '', weight: '' });
+                updatedList[idx].sets!.push({ reps: '', weight: '', completed: false }); // Initialize completed as false
                 setExerciseList(updatedList);
               }}
             >
@@ -185,26 +224,17 @@ export default function TimerScreen() {
             </TouchableOpacity>
           </View>
         ))}
-
       </ScrollView>
 
       <TouchableOpacity onPress={navigateToAdd} style={styles.addExerciseButton}>
         <Text style={styles.buttonText}>Add exercise</Text>
       </TouchableOpacity>
       <TouchableOpacity
-  onPress={() => {
-    router.push({
-      pathname: '/workouttabs/saveworkout',
-      params: {
-        exercises: JSON.stringify(exerciseList),
-      },
-    });
-  }}
-  style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d',marginBottom: 30 }]}
->
-  <Text style={{ color: '#000', fontWeight: 'bold',  }}>Finish Workout</Text>
-</TouchableOpacity>
-
+        onPress={handleFinishWorkout}
+        style={[styles.addExerciseButton, { backgroundColor: '#ffd33d', borderColor: '#ffd33d', marginBottom: 30 }]}
+      >
+        <Text style={{ color: '#000', fontWeight: 'bold' }}>Finish Workout</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -248,7 +278,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
     borderRadius: 10,
     marginTop: 12,
-  }, 
+  },
   timercontainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -281,12 +311,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   input: {
-  backgroundColor: '#2c2c2e',
-  color: 'white',
-  padding: 8,
-  borderRadius: 6,
-  marginTop: 4,
-  marginBottom: 4,
-},
-
+    backgroundColor: '#2c2c2e',
+    color: 'white',
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  inputGreyedOut: {
+    backgroundColor: '#333',
+    color: '#888',
+  },
+  setRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  setTextInputContainer: {
+    flex: 1, // Allows text inputs to take available space
+    marginRight: 10, // Space between text inputs and checkbox
+  },
+  checkboxContainer: {
+    // No specific styles needed here unless you want to adjust alignment
+  },
 });
