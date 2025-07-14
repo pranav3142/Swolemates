@@ -159,10 +159,10 @@ export default function BuddyMatch() {
         <Text style={styles.info}>{profile.age} | {profile.location}</Text>
         <Text style={styles.info}>{profile.fitness_level} | {profile.goal}</Text>
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.crossButton} onPress={nextProfile}>
+          <TouchableOpacity testID="skip-btn" style={styles.crossButton} onPress={nextProfile}>
             <Ionicons name="close" size={40} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.tickButton} onPress={handleLike}>
+          <TouchableOpacity testID="like-btn" style={styles.tickButton} onPress={handleLike}>
             <Ionicons name="checkmark" size={40} color="#fff" />
           </TouchableOpacity>
         </View>

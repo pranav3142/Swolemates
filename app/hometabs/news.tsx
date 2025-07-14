@@ -74,7 +74,7 @@ export default function NewsScreen() {
                 )}
                 <View style={styles.metaRow}>
                   <Text style={styles.metaText}>
-                    {item.source?.name || 'Unknown Source'} - {formatDate(item.publishedAt)}
+                    {item.source?.name || 'Unknown Source'} -n {formatDate(item.publishedAt)}
                   </Text>
                 </View>
               </View>

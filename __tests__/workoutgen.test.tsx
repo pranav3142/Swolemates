@@ -48,7 +48,6 @@ describe('ExGen Workout Generator', () => {
 
   it('alerts if required fields missing on generate', () => {
     const { getByText } = render(<ExGen />);
-    // The Alert.alert will not display in test, but no crash = pass
     fireEvent.press(getByText('Generate Workout'));
   });
 
@@ -63,5 +62,38 @@ describe('ExGen Workout Generator', () => {
       expect(getByText('Your Personalized Workout:')).toBeTruthy();
       expect(getByText('Workout: Example')).toBeTruthy();
     });
+  });
+
+  it('regenerates new workouts on repeated generate', async () => {
+    const { getByText, getByPlaceholderText } = render(<ExGen />);
+    fireEvent.changeText(getByPlaceholderText('Enter your goals'), 'Gain muscle');
+    fireEvent.changeText(getByPlaceholderText('Enter available equipment'), 'Bodyweight');
+    fireEvent.changeText(getByPlaceholderText('Enter any additional remarks'), 'No equipment');
+    fireEvent.press(getByText('Intermediate'));
+    fireEvent.press(getByText('Generate Workout'));
+
+    await waitFor(() => getByText('Workout: Example'));
+
+    fireEvent.press(getByText('Generate Workout'));
+    await waitFor(() => getByText('Workout: Example'));
+  });
+
+  it('passes workout to start tracking screen on confirm', async () => {
+    const mockPush = jest.fn();
+    jest.spyOn(require('expo-router'), 'useRouter').mockReturnValue({ push: mockPush });
+
+    const { getByText, getByPlaceholderText } = render(<ExGen />);
+    fireEvent.changeText(getByPlaceholderText('Enter your goals'), 'Endurance');
+    fireEvent.changeText(getByPlaceholderText('Enter available equipment'), 'Treadmill');
+    fireEvent.changeText(getByPlaceholderText('Enter any additional remarks'), 'Cardio focus');
+    fireEvent.press(getByText('Advanced'));
+    fireEvent.press(getByText('Generate Workout'));
+
+    await waitFor(() => getByText('Use This Workout'));
+    fireEvent.press(getByText('Use This Workout'));
+
+    expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({
+      pathname: '/workouttabs/startworkout',
+    }));
   });
 });

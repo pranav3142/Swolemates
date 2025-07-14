@@ -399,7 +399,7 @@ export default function ProfileScreen() {
         ))}
 
         {/* --- Logout --- */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} testID = "logout-btn">
           <Pressable onPress={() => router.push('../(auth)/welcome')}>
             <Text style={styles.logoutText}>Logout</Text>
           </Pressable>
