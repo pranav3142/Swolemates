@@ -24,7 +24,7 @@ export default function NewsScreen() {
     try {
       setLoading(true);
       const res = await fetch(
-        `https://newsapi.org/v2/everything?q=gym+fitness+nutrition&language=en&sortBy=publishedAt&pageSize=15&apiKey=${API_KEY}`
+        `https://newsapi.org/v2/everything?q=gym+fitness+nutrition-sex&language=en&sortBy=publishedAt&pageSize=15&apiKey=${API_KEY}`
       );
       const data = await res.json();
       if (!data.articles) throw new Error('Invalid response');
