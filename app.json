@@ -14,6 +14,11 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBT6rcaMi9yQx43atgaVxptmvJAfMm4CHk"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/swolematesSplash.png",
         "backgroundColor": "#000000"

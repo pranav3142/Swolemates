@@ -1,19 +1,21 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, Linking,
+  TouchableOpacity, ActivityIndicator, Image, RefreshControl
+} from 'react-native';
 import { useNavigation } from 'expo-router';
 
 export default function NewsScreen() {
   const [news, setNews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'Read the latest gym news',
-      headerStyle: {
-        backgroundColor: '#25292e',
-      },
+      headerStyle: { backgroundColor: '#25292e' },
       headerTintColor: '#fff',
     });
   }, [navigation]);
@@ -22,9 +24,9 @@ export default function NewsScreen() {
 
   const fetchNews = async () => {
     try {
-      setLoading(true);
+      if (!refreshing) setLoading(true);
       const res = await fetch(
-        `https://newsapi.org/v2/everything?q=gym+fitness+nutrition-sex&language=en&sortBy=publishedAt&pageSize=15&apiKey=${API_KEY}`
+        `https://newsapi.org/v2/everything?q=gym+fitness+nutrition+health&language=en&sortBy=publishedAt&pageSize=15&apiKey=${API_KEY}`
       );
       const data = await res.json();
       if (!data.articles) throw new Error('Invalid response');
@@ -33,12 +35,18 @@ export default function NewsScreen() {
       setError(err.message || 'Failed to fetch news');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchNews();
   }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchNews();
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -51,12 +59,16 @@ export default function NewsScreen() {
 
   return (
     <View style={styles.container}>
-      
-      {loading && <ActivityIndicator size="large" color="#ffd33d" />}
+      {loading && !refreshing && <ActivityIndicator size="large" color="#ffd33d" />}
       {error && <Text style={styles.errorText}>Error: {error}</Text>}
 
       {!loading && !error && (
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 24 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#ffd33d']} />
+          }
+        >
           {news.map((item, idx) => (
             <TouchableOpacity
               key={idx}
@@ -64,9 +76,9 @@ export default function NewsScreen() {
               onPress={() => Linking.openURL(item.url)}
               activeOpacity={0.9}
             >
-              {item.urlToImage ? (
+              {item.urlToImage && (
                 <Image source={{ uri: item.urlToImage }} style={styles.thumbnail} />
-              ) : null}
+              )}
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 {item.description && (
@@ -74,7 +86,7 @@ export default function NewsScreen() {
                 )}
                 <View style={styles.metaRow}>
                   <Text style={styles.metaText}>
-                    {item.source?.name || 'Unknown Source'} -n {formatDate(item.publishedAt)}
+                    {item.source?.name || 'Unknown Source'} – {formatDate(item.publishedAt)}
                   </Text>
                 </View>
               </View>
@@ -88,7 +100,6 @@ export default function NewsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#25292e', padding: 16 },
-  title: { color: '#ffd33d', fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
   errorText: { color: '#ff5555', fontSize: 16, marginTop: 20 },
   card: {
     backgroundColor: '#2c2c2e',
