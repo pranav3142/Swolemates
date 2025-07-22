@@ -35,16 +35,42 @@ const rawGyms = {
     { id: 'asg18', name: 'Yishun Sports Hall', location: 'Yishun', lat: 1.4282, lng: 103.8382 },
   ],
   Anytime: [
-    { id: 'af1', name: 'Anytime Fitness - Choa Chu Kang', lat: 1.381, lng: 103.744, location: 'Choa Chu Kang' },
-    { id: 'af2', name: 'Anytime Fitness - NEX Serangoon', lat: 1.350, lng: 103.873, location: 'Serangoon' }
+  { id: 'af1', name: 'Anytime Fitness – NEX Serangoon', location: 'Serangoon', lat: 1.3500, lng: 103.8730, brand: 'Anytime' },
+  { id: 'af2', name: 'Anytime Fitness – Clementi City', location: 'Clementi', lat: 1.3150, lng: 103.7640, brand: 'Anytime' },
+  { id: 'af3', name: 'Anytime Fitness – HillV2 Bukit Batok', location: 'Bukit Batok', lat: 1.3510, lng: 103.7700, brand: 'Anytime' },
+  { id: 'af4', name: 'Anytime Fitness – Northshore Plaza', location: 'Punggol', lat: 1.4110, lng: 103.9000, brand: 'Anytime' },
+  { id: 'af5', name: 'Anytime Fitness – Tiong Bahru Plaza', location: 'Tiong Bahru', lat: 1.2860, lng: 103.8300, brand: 'Anytime' },
+  { id: 'af6', name: 'Anytime Fitness – Jurong Point', location: 'Jurong West', lat: 1.3490, lng: 103.7070, brand: 'Anytime' },
+  { id: 'af7', name: 'Anytime Fitness – Nanyang CC', location: 'Jurong West', lat: 1.3495, lng: 103.6910, brand: 'Anytime' },
+  { id: 'af8', name: 'Anytime Fitness – NUS', location: 'Kent Ridge', lat: 1.2966, lng: 103.7764, brand: 'Anytime' },
+  { id: 'af9', name: 'Anytime Fitness – Novena', location: 'Novena', lat: 1.3110, lng: 103.8449, brand: 'Anytime' },
+  { id: 'af10', name: 'Anytime Fitness – Wisteria Mall', location: 'Yishun', lat: 1.4320, lng: 103.8350, brand: 'Anytime' },
+  { id: 'af11', name: 'Anytime Fitness – Northpoint City', location: 'Yishun', lat: 1.4380, lng: 103.785, brand: 'Anytime' },
+  { id: 'af12', name: 'Anytime Fitness – Downtown East', location: 'Pasir Ris', lat: 1.3730, lng: 103.9450, brand: 'Anytime' },
+  { id: 'af13', name: 'Anytime Fitness – HarbourFront', location: 'HarbourFront', lat: 1.2650, lng: 103.8220, brand: 'Anytime' },
+  { id: 'af14', name: 'Anytime Fitness – Eastpoint Mall', location: 'Simei', lat: 1.3430, lng: 103.9550, brand: 'Anytime' },
+  { id: 'af15', name: 'Anytime Fitness – Balestier', location: 'Balestier', lat: 1.3190, lng: 103.8450, brand: 'Anytime' },
   ],
   '24/7': [
-    { id: '247_1', name: '24/7 Fitness - Keat Hong CC', lat: 1.383, lng: 103.741, location: 'Choa Chu Kang' },
-    { id: '247_2', name: '24/7 Fitness - Tampines North CC', lat: 1.354, lng: 103.945, location: 'Tampines' }
+  { id: '2471', name: '24/7 Fitness – Bishan CC', location: 'Bishan', lat: 1.3490, lng: 103.8510, brand: '24/7' },
+  { id: '2472', name: '24/7 Fitness – Canberra Plaza', location: 'Sembawang', lat: 1.4470, lng: 103.8190, brand: '24/7' },
+  { id: '2473', name: '24/7 Fitness – Ci Yuan CC', location: 'Hougang', lat: 1.3910, lng: 103.8940, brand: '24/7' },
+  { id: '2474', name: '24/7 Fitness – Elias Mall', location: 'Pasir Ris', lat: 1.3730, lng: 103.9490, brand: '24/7' },
+  { id: '2475', name: '24/7 Fitness – Fernvale CC', location: 'Sengkang', lat: 1.3900, lng: 103.8940, brand: '24/7' },
+  { id: '2476', name: '24/7 Fitness – Keat Hong CC', location: 'Choa Chu Kang', lat: 1.3840, lng: 103.7450, brand: '24/7' },
+  { id: '2477', name: '24/7 Fitness – Margaret Market', location: 'Queenstown', lat: 1.2940, lng: 103.8210, brand: '24/7' },
+  { id: '2478', name: '24/7 Fitness – Orchard (Pacific Plaza)', location: 'Orchard', lat: 1.3040, lng: 103.8320, brand: '24/7' },
+  { id: '2479', name: '24/7 Fitness – Tampines North CC', location: 'Tampines', lat: 1.3540, lng: 103.9450, brand: '24/7' },
+  { id: '24710', name: '24/7 Fitness – The Cathay', location: 'Dhoby Ghaut', lat: 1.2970, lng: 103.8450, brand: '24/7' },
+  { id: '24711', name: '24/7 Fitness – Vista Point', location: 'Woodlands', lat: 1.4320, lng: 103.7870, brand: '24/7' }
   ],
   Snap: [
-    { id: 'sf1', name: 'Snap Fitness - Pasir Ris Central', lat: 1.373, lng: 103.945, location: 'Pasir Ris' },
-    { id: 'sf2', name: 'Snap Fitness - Potong Pasir', lat: 1.33, lng: 103.861, location: 'Potong Pasir' }
+  { id: 'sf1', name: 'Snap Fitness – Woodlands Woods Square', location: 'Woodlands', lat: 1.4330, lng: 103.7865, brand: 'Snap' },
+  { id: 'sf2', name: 'Snap Fitness – Pasir Ris Central', location: 'Pasir Ris', lat: 1.3730, lng: 103.9450, brand: 'Snap' },
+  { id: 'sf3', name: 'Snap Fitness – Prinsep Street', location: 'City Hall', lat: 1.2970, lng: 103.8490, brand: 'Snap' },
+  { id: 'sf4', name: 'Snap Fitness – Anchorpoint', location: 'Bukit Merah', lat: 1.2760, lng: 103.8230, brand: 'Snap' },
+  { id: 'sf5', name: 'Snap Fitness – Toa Payoh', location: 'Toa Payoh', lat: 1.3340, lng: 103.8450, brand: 'Snap' },
+  { id: 'sf6', name: 'Snap Fitness – Pasir Ris Mall', location: 'Pasir Ris', lat: 1.3740, lng: 103.9455, brand: 'Snap' },
   ]
 };
 
