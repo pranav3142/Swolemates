@@ -20,6 +20,8 @@ import Collapsible from 'react-native-collapsible';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../utils/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const FITNESS_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 
@@ -399,10 +401,20 @@ export default function ProfileScreen() {
         ))}
 
         {/* --- Logout --- */}
-        <TouchableOpacity style={styles.logoutButton} testID = "logout-btn">
-          <Pressable onPress={() => router.push('../(auth)/welcome')}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </Pressable>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          testID="logout-btn"
+          onPress={async () => {
+            try {
+              await AsyncStorage.setItem('stayLoggedIn', 'false');
+              await auth().signOut();
+              router.push('../(auth)/welcome');
+            } catch (e) {
+              Alert.alert('Logout failed', e.message || 'An error occurred.');
+            }
+          }}
+        >
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

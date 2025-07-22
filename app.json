@@ -11,7 +11,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.abefqy.Swolemates",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app requires access to your location to find nearby gyms and workout partners.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app requires access to your location to find nearby gyms and workout partners.",
+        "NSLocationAlwaysUsageDescription": "This app requires access to your location to find nearby gyms and workout partners."
+      }
     },
     "android": {
       "config": {
@@ -33,6 +38,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-location",
       [
         "expo-image-picker",
         {
