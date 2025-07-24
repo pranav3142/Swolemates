@@ -1,8 +1,8 @@
 export const markerColors: Record<string, string> = {
   ActiveSG: 'red',
-  Anytime: 'purple',
-  '24/7': '#40E0D0', // Tiffany Blue
-  Snap: 'grey'
+  Anytime: '#7f00a6ff',
+  '24/7': '#40E0D0',
+  Snap: '#dfe21aff'
 };
 
 export const rawGyms = {

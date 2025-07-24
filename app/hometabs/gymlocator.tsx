@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, TextInput, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Keyboard } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import MapViewCluster from 'react-native-map-clustering';
 import * as Location from 'expo-location';
-import * as Linking from 'expo-linking';
 import { useNavigation } from 'expo-router';
+import { openURL } from 'expo-linking';
 import { Modalize } from 'react-native-modalize';
-import Collapsible from 'react-native-collapsible';
 
 import { rawGyms, markerColors } from '../../gyms-data';
 
@@ -21,203 +19,213 @@ export default function GymLocator() {
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [selectedGym, setSelectedGym] = useState(null);
-  const [loadingLocation, setLoadingLocation] = useState(true);
   const [searchText, setSearchText] = useState('');
-  const [collapsed, setCollapsed] = useState({});
-  const [filteredGyms, setFilteredGyms] = useState(gyms);
-
-  // Search gym by name
-  useEffect(() => {
-    if (!searchText.trim()) {
-      setFilteredGyms(gyms);
-    } else {
-      setFilteredGyms(
-        gyms.filter(gym =>
-          gym.name.toLowerCase().includes(searchText.trim().toLowerCase())
-        )
-      );
-    }
-  }, [searchText]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [brandFilters, setBrandFilters] = useState({
+    ActiveSG: true,
+    Anytime: true,
+    '24/7': true,
+    Snap: true
+  });
 
   useEffect(() => {
     navigation.setOptions({
-      title: 'Locate a Gym',
+      title: 'Locate a gym',
       headerStyle: { backgroundColor: '#25292e' },
       headerTintColor: '#fff',
     });
-
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Location access is required.');
+        Alert.alert('Permission denied', 'Location permission is required to use this feature.');
         return;
       }
-
-      const location = await Location.getCurrentPositionAsync({});
+      let location = await Location.getCurrentPositionAsync({});
       setCurrentLocation(location.coords);
-      setLoadingLocation(false);
     })();
   }, []);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371e3;
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-    const a = Math.sin(Δφ / 2) ** 2 +
-      Math.cos(φ1) * Math.cos(φ2) *
-      Math.sin(Δλ / 2) ** 2;
-
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return (R * c) / 1000; // distance in km
+    return R * c;
   };
 
-  const centerMapOnUser = () => {
-    if (currentLocation && mapRef.current) {
+  const findNearestGym = useCallback(() => {
+    if (!currentLocation) return;
+    const filteredGyms = gyms.filter(g => brandFilters[g.brand]);
+    const best = filteredGyms.reduce((prev, gym) => {
+      const dist = calculateDistance(currentLocation.latitude, currentLocation.longitude, gym.lat, gym.lng);
+      return !prev || dist < prev.dist ? { gym, dist } : prev;
+    }, null);
+    if (best && best.gym && mapRef.current) {
       mapRef.current.animateToRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
+        latitude: best.gym.lat,
+        longitude: best.gym.lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+      setSelectedGym(best.gym);
+      const dist = best.dist.toFixed(2);
+      setSearchResults([{ ...best.gym, distance: dist }]);
+      modalRef.current?.open();
+    }
+  }, [currentLocation, brandFilters]);
+
+  const handleSearch = () => {
+    const filtered = gyms.filter(g =>
+      g.name.toLowerCase().includes(searchText.toLowerCase()) && brandFilters[g.brand]
+    );
+    setSearchResults(filtered);
+    modalRef.current?.open();
+    Keyboard.dismiss();
+  };
+
+  const handleResultSelect = gym => {
+    modalRef.current?.close();
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: gym.lat,
+        longitude: gym.lng,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
     }
+    setSelectedGym(gym);
   };
 
-  const handleMarkerPress = gym => {
+  const toggleBrand = (brand) => {
+    setBrandFilters(prev => ({ ...prev, [brand]: !prev[brand] }));
+  };
+
+  const handleMarkerLongPress = (gym) => {
+    const dist = calculateDistance(currentLocation.latitude, currentLocation.longitude, gym.lat, gym.lng).toFixed(2);
     setSelectedGym(gym);
+    setSearchResults([{ ...gym, distance: dist }]);
     modalRef.current?.open();
   };
 
-  const openInGoogleMaps = (lat, lng) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    Linking.openURL(url);
-  };
-
-  if (loadingLocation || !currentLocation) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 10 }}>Getting your location...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={{ flex: 1 }}>
-      <MapViewCluster
-        style={{ flex: 1 }}
+      <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
+        style={{ flex: 1 }}
         initialRegion={{
-          latitude: currentLocation.latitude,
-          longitude: currentLocation.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
+          latitude: 1.3521,
+          longitude: 103.8198,
+          latitudeDelta: 0.2,
+          longitudeDelta: 0.2,
         }}
-        showsUserLocation
       >
-        {filteredGyms.map(gym => (
+        {gyms.filter(g => brandFilters[g.brand]).map(gym => (
           <Marker
             key={gym.id}
             coordinate={{ latitude: gym.lat, longitude: gym.lng }}
+            title={gym.name}
+            description={gym.location}
             pinColor={markerColors[gym.brand] || 'blue'}
-            onPress={() => handleMarkerPress(gym)}
+            onPress={() => setSelectedGym(gym)}
+            onLongPress={() => handleMarkerLongPress(gym)}
           />
         ))}
-      </MapViewCluster>
+      </MapView>
 
-      {/* Recenter Button */}
-      <TouchableOpacity style={styles.recenterButton} onPress={centerMapOnUser}>
-        <Text style={styles.recenterText}>🎯</Text>
-      </TouchableOpacity>
+      <View style={styles.controlRow}>
+        {Object.keys(brandFilters).map(brand => (
+          <TouchableOpacity key={brand} onPress={() => toggleBrand(brand)} style={[styles.filterButton, !brandFilters[brand] && styles.filterDisabled]}>
+            <Text style={{ color: '#fff' }}>{brand}</Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.locateButtonInline} onPress={findNearestGym}>
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>📍</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Search bar */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search gym by name"
-        placeholderTextColor="#ccc"
-        value={searchText}
-        onChangeText={setSearchText}
-      />
+      <View style={styles.searchWrapper}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search gym by name..."
+          value={searchText}
+          onChangeText={setSearchText}
+          onSubmitEditing={handleSearch}
+        />
+      </View>
 
-      {/* Modal for selected gym */}
-      <Modalize ref={modalRef} adjustToContentHeight scrollViewProps={{ keyboardShouldPersistTaps: 'handled' }}>
-        {selectedGym && (
-          <View style={styles.modalContent}>
-            <Text style={styles.gymName}>{selectedGym.name}</Text>
-            <Text>{selectedGym.location}</Text>
-            <Text>{selectedGym.brand}</Text>
-            <Text>
-              Distance:{' '}
-              {calculateDistance(
-                currentLocation.latitude,
-                currentLocation.longitude,
-                selectedGym.lat,
-                selectedGym.lng
-              ).toFixed(2)} km
-            </Text>
-            <TouchableOpacity
-              style={styles.directionsButton}
-              onPress={() => openInGoogleMaps(selectedGym.lat, selectedGym.lng)}
-            >
-              <Text style={styles.directionsText}>Open in Google Maps</Text>
+      <Modalize
+        ref={modalRef}
+        flatListProps={{
+          data: searchResults,
+          keyExtractor: (item) => item.id,
+          ListHeaderComponent: () => (
+            <View style={{ padding: 16 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Search Results</Text>
+            </View>
+          ),
+          renderItem: ({ item }) => (
+            <TouchableOpacity onPress={() => handleResultSelect(item)} style={{ padding: 16 }}>
+              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
+              <Text style={{ color: 'gray' }}>{item.location}</Text>
+              {item.distance && <Text style={{ color: 'gray' }}>{item.distance} km away</Text>}
+              <TouchableOpacity
+                onPress={() => openURL(`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`)}
+                style={{ marginTop: 8, backgroundColor: '#25292e', padding: 8, borderRadius: 6 }}
+              >
+                <Text style={{ color: 'white', textAlign: 'center' }}>Open in Google Maps</Text>
+              </TouchableOpacity>
             </TouchableOpacity>
-          </View>
-        )}
-      </Modalize>
+          )
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1, justifyContent: 'center', alignItems: 'center'
-  },
-  recenterButton: {
+  searchWrapper: {
     position: 'absolute',
-    bottom: 100,
-    right: 20,
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    padding: 10,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 }
-  },
-  recenterText: {
-    fontSize: 20,
-  },
-  searchBar: {
-    position: 'absolute',
-    bottom: 30,
-    left: 20,
-    right: 20,
-    backgroundColor: '#333',
-    padding: 12,
+    bottom: 20,
+    left: 10,
+    right: 10,
+    backgroundColor: 'white',
     borderRadius: 8,
-    color: '#fff'
+    paddingHorizontal: 10,
+    elevation: 5,
   },
-  modalContent: {
-    padding: 20,
+  searchInput: {
+    height: 40,
   },
-  gymName: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 6
+  locateButtonInline: {
+    backgroundColor: '#25292e',
+    padding: 8,
+    borderRadius: 20,
+    marginLeft: 5
   },
-  directionsButton: {
-    marginTop: 15,
-    backgroundColor: '#007AFF',
-    padding: 10,
-    borderRadius: 8
+  controlRow: {
+    position: 'absolute',
+    bottom: 70,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
-  directionsText: {
-    color: '#fff',
-    textAlign: 'center',
+  filterButton: {
+    backgroundColor: '#25292e',
+    padding: 8,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    marginVertical: 2
+  },
+  filterDisabled: {
+    backgroundColor: 'grey'
   }
 });
