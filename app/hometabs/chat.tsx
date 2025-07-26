@@ -1,5 +1,14 @@
-import React, { useEffect, useState,useLayoutEffect } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform,} from 'react-native';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { supabase } from '../../utils/supabase';
 import { useNavigation } from 'expo-router';
@@ -9,19 +18,19 @@ export default function ChatScreen() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [selectedUsername, setSelectedUsername] = useState('');
   const currentUser = auth().currentUser?.uid;
-
   const navigation = useNavigation();
-  
-    useLayoutEffect(() => {
-      navigation.setOptions({
-        title: 'Chat',
-        headerStyle: {
-          backgroundColor: '#25292e',
-        },
-        headerTintColor: '#fff',
-      });
-    }, [navigation]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Chat',
+      headerStyle: {
+        backgroundColor: '#25292e',
+      },
+      headerTintColor: '#fff',
+    });
+  }, [navigation]);
 
   useEffect(() => {
     fetchMutualFollows();
@@ -49,6 +58,19 @@ export default function ChatScreen() {
 
   const fetchMessages = async (otherUserId: string) => {
     setSelectedUser(otherUserId);
+
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', otherUserId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching username:', profileError.message);
+      setSelectedUsername('Unknown');
+    } else {
+      setSelectedUsername(profileData.username);
+    }
 
     const { data, error } = await supabase
       .from('messages')
@@ -82,7 +104,7 @@ export default function ChatScreen() {
     }
 
     setNewMessage('');
-    fetchMessages(selectedUser); // Refresh
+    fetchMessages(selectedUser);
   };
 
   return (
@@ -112,6 +134,8 @@ export default function ChatScreen() {
           <TouchableOpacity onPress={() => setSelectedUser(null)}>
             <Text style={styles.backButton}>← Back</Text>
           </TouchableOpacity>
+
+          <Text style={styles.chatTitle}>{selectedUsername}</Text>
 
           <FlatList
             data={messages}
@@ -160,6 +184,13 @@ const styles = StyleSheet.create({
   },
   userText: { color: '#fff', fontSize: 16 },
   backButton: { color: '#ffd33d', marginBottom: 12, fontSize: 16 },
+  chatTitle: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginBottom: 12,
+    alignSelf: 'center',
+  },
   messageList: { paddingBottom: 20 },
   messageBubble: {
     padding: 10,
